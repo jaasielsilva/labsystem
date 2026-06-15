@@ -1,0 +1,3 @@
+-- V1: Schema inicial do labsystem
+-- Reservado para configurações globais do banco de dados.
+-- Tabelas de features são criadas em migrations subsequentes (V2, V3...).

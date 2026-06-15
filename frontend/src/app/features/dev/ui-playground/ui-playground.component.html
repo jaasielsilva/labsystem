@@ -1,0 +1,233 @@
+<div class="playground animate-fade-in">
+  <aside class="playground-nav glass-card">
+    <p class="nav-brand">LS1</p>
+    <p class="nav-tag">Design System · LS1 Light</p>
+    <nav>
+      <a *ngFor="let s of sections" [href]="'#' + s.id" class="nav-link">{{ s.label }}</a>
+    </nav>
+    <a routerLink="/clientes" class="nav-back">← Voltar ao app</a>
+  </aside>
+
+  <main class="playground-main">
+    <header class="playground-hero">
+      <span class="preview-pill">LS1 Light — aprovado</span>
+      <h1 class="page-title">Labsystem Design System</h1>
+      <p class="page-subtitle">
+        Tema claro hospitalar · fundo branco e azul clínico · teal de saúde · Plus Jakarta Sans.
+        Padrão oficial para novas telas.
+      </p>
+    </header>
+
+    <!-- TOKENS -->
+    <section id="tokens" class="ds-section glass-card">
+      <h2 class="section-label">01 — Tokens de cor</h2>
+      <div class="token-grid">
+        <div class="token-swatch" *ngFor="let c of colorTokens">
+          <div class="swatch-color" [style.background]="'var(' + c.var + ')'"></div>
+          <div class="swatch-meta">
+            <strong>{{ c.name }}</strong>
+            <span>{{ c.hex }}</span>
+            <code>{{ c.var }}</code>
+          </div>
+        </div>
+      </div>
+      <div class="token-extra">
+        <div class="token-box glass-mini">Card BG</div>
+        <div class="token-box glass-mini bordered">Card Border</div>
+        <div class="token-box glass-mini glow">Primary Glow</div>
+      </div>
+    </section>
+
+    <!-- TIPOGRAFIA -->
+    <section id="tipografia" class="ds-section glass-card">
+      <h2 class="section-label">02 — Tipografia</h2>
+      <div class="type-stack">
+        <h1 class="page-title">Título de página (H1)</h1>
+        <h2 class="type-h2">Título de seção (H2)</h2>
+        <p class="type-body">Texto de corpo — usado em descrições, tabelas e parágrafos do sistema.</p>
+        <p class="type-muted">Texto secundário — labels, hints e metadados.</p>
+        <label class="form-label">Label de formulário</label>
+      </div>
+    </section>
+
+    <!-- BOTÕES -->
+    <section id="botoes" class="ds-section glass-card">
+      <h2 class="section-label">03 — Botões</h2>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+        <button type="button" class="btn btn-danger">Danger</button>
+        <button type="button" class="btn btn-primary" disabled>Disabled</button>
+        <button type="button" class="btn btn-primary">
+          <span class="spinner-sm"></span>
+          Loading
+        </button>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary btn-sm">Small Primary</button>
+        <button type="button" class="btn btn-secondary btn-sm">Small Secondary</button>
+      </div>
+    </section>
+
+    <!-- FORMULÁRIOS -->
+    <section id="formularios" class="ds-section glass-card">
+      <h2 class="section-label">04 — Formulários</h2>
+      <form [formGroup]="demoForm" class="demo-form" (ngSubmit)="$event.preventDefault()">
+        <div class="form-group">
+          <label for="demo-nome" class="form-label">Nome completo *</label>
+          <input
+            id="demo-nome"
+            type="text"
+            class="form-control"
+            formControlName="nome"
+            placeholder="Ex: Ana Maria"
+            [class.is-invalid]="f['nome'].touched && f['nome'].invalid"
+          />
+          <div class="invalid-feedback" *ngIf="f['nome'].touched && f['nome'].invalid">
+            O nome é obrigatório.
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="demo-email" class="form-label">E-mail *</label>
+            <input
+              id="demo-email"
+              type="email"
+              class="form-control"
+              formControlName="email"
+              [class.is-invalid]="f['email'].touched && f['email'].invalid"
+            />
+            <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].invalid">
+              E-mail inválido.
+            </div>
+          </div>
+          <div class="form-group col-half">
+            <label for="demo-data" class="form-label">Data</label>
+            <input id="demo-data" type="date" class="form-control" formControlName="data" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="markFormTouched()">Simular erros</button>
+          <button type="submit" class="btn btn-primary" [disabled]="demoForm.invalid">Salvar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- FEEDBACK -->
+    <section id="feedback" class="ds-section glass-card">
+      <h2 class="section-label">05 — Feedback</h2>
+      <p class="type-muted" style="margin-bottom: 16px">
+        <strong>Padrão do sistema:</strong> toast flutuante via <code>ToastService</code> (sucesso, erro, aviso, info).
+        Alerts inline abaixo — só para contexto fixo na página, não para ações transitórias.
+      </p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary btn-sm" (click)="showToast('success')">Toast sucesso</button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="showToast('error')">Toast erro</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showToast('warning')">Toast aviso</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="showToast('info')">Toast info</button>
+      </div>
+      <p class="section-label" style="margin-top: 24px">Alerts inline (contexto na tela)</p>
+      <div class="alert alert-success">Cliente salvo com sucesso.</div>
+      <div class="alert alert-danger">Não foi possível conectar. Tente novamente.</div>
+      <div class="alert alert-warning">Limite do plano quase atingido.</div>
+      <div class="alert alert-info">Novo resultado disponível para entrega.</div>
+
+      <div class="feedback-row">
+        <div class="feedback-box glass-mini">
+          <p class="section-label">Loading</p>
+          <div class="spinner text-primary"></div>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="toggleLoading()">
+            {{ showLoading ? 'Parar' : 'Simular' }} overlay
+          </button>
+        </div>
+        <div class="feedback-box glass-mini relative-box">
+          <p class="section-label">Empty state</p>
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <p>Nenhum registro encontrado.</p>
+            <a href="#" class="empty-cta" (click)="$event.preventDefault()">Cadastrar primeiro</a>
+          </div>
+          <div class="loader-overlay" *ngIf="showLoading">
+            <div class="spinner text-primary"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BADGES -->
+    <section id="badges" class="ds-section glass-card">
+      <h2 class="section-label">06 — Badges de status</h2>
+      <div class="badge-row">
+        <span class="badge badge-green">Ativo</span>
+        <span class="badge badge-blue">Aberto</span>
+        <span class="badge badge-yellow">Pendente</span>
+        <span class="badge badge-gray">Fechado</span>
+        <span class="badge badge-rose">Urgente</span>
+      </div>
+    </section>
+
+    <!-- TABELA -->
+    <section id="tabela" class="ds-section glass-card table-wrapper">
+      <h2 class="section-label ds-section-pad">07 — Tabela de dados</h2>
+      <table class="premium-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of demoRows">
+            <td class="text-muted-cell">{{ row.id }}</td>
+            <td><strong>{{ row.nome }}</strong></td>
+            <td class="accent-cell">{{ row.email }}</td>
+            <td><span class="badge" [ngClass]="badgeClass(row.status)">{{ row.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <footer class="table-footer">
+        <span class="page-subtitle">Mostrando 3 de 3</span>
+        <div class="pagination-demo">
+          <button type="button" class="page-btn" disabled>Anterior</button>
+          <span class="page-subtitle">Página 1 de 1</span>
+          <button type="button" class="page-btn" disabled>Próxima</button>
+        </div>
+      </footer>
+    </section>
+
+    <!-- LAYOUT -->
+    <section id="layout" class="ds-section">
+      <h2 class="section-label">08 — Layout de tela (listagem + painel)</h2>
+      <div class="layout-grid">
+        <div class="glass-card layout-panel">
+          <h3 class="type-h2">Novo registro</h3>
+          <p class="type-muted">Formulário lateral — padrão de cadastro rápido.</p>
+          <div class="form-group">
+            <label class="form-label">Campo exemplo</label>
+            <input type="text" class="form-control" placeholder="Digite aqui..." />
+          </div>
+          <button type="button" class="btn btn-primary" style="width:100%">Salvar</button>
+        </div>
+        <div class="glass-card layout-panel table-wrapper">
+          <h3 class="type-h2">Listagem</h3>
+          <p class="type-muted">Tabela principal com ações.</p>
+          <table class="premium-table compact">
+            <thead>
+              <tr><th>Item</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Exame hemograma</td><td><span class="badge badge-green">OK</span></td></tr>
+              <tr><td>Exame glicose</td><td><span class="badge badge-yellow">Aguardando</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer class="playground-footer">
+      <p>Referência viva em <code>frontend/src/styles.css</code> · documentado na skill <code>/labsystem</code>.</p>
+    </footer>
+  </main>
+</div>

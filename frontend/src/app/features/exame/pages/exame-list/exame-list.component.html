@@ -1,0 +1,246 @@
+<div class="page-content animate-fade-in">
+
+  <header class="page-header">
+    <div class="title-group">
+      <h1 class="page-title-sm">Exames</h1>
+      <p class="page-subtitle">Catálogo de exames laboratoriais</p>
+    </div>
+
+    <button
+      class="btn btn-primary btn-sm"
+      routerLink="/exames/novo"
+      *ngIf="auth?.canEdit?.()"
+    >
+      + Novo exame
+    </button>
+  </header>
+
+  <div class="glass-card table-wrapper">
+
+    <!-- TOOLBAR -->
+    <div class="table-toolbar">
+
+      <div class="table-search">
+        <input
+          #searchInput
+          type="search"
+          class="form-control table-search-input"
+          placeholder="Buscar por nome, código ou categoria..."
+          (input)="onSearchInput($event)"
+          aria-label="Buscar exames"
+        />
+
+        <button
+          type="button"
+          class="search-clear"
+          *ngIf="hasActiveSearch"
+          (click)="clearSearch()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="table-toolbar-end">
+
+        <span class="table-toolbar-meta">
+          @if (loading()) {
+            Carregando...
+          } @else if (totalElements === 0 && hasActiveSearch) {
+            Nenhum resultado
+          } @else if (totalElements === 0) {
+            Nenhum registro
+          } @else {
+            {{ totalElements }} {{ totalElements === 1 ? 'exame' : 'exames' }}
+          }
+        </span>
+
+        @if (totalElements > 0 && !loading()) {
+          <span class="stat-chip">
+            Ordenado por {{ sortLabel }}
+          </span>
+        }
+
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="loader-overlay" *ngIf="loading()">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando exames...</p>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <table class="premium-table dense">
+
+      <thead>
+        <tr>
+          <th (click)="setSort('codigo')" class="sortable">
+            Código
+            <span class="sort-icon" *ngIf="sortBy === 'codigo'">
+              {{ sortDir === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+
+          <th (click)="setSort('nome')" class="sortable">
+            Nome
+            <span class="sort-icon" *ngIf="sortBy === 'nome'">
+              {{ sortDir === 'asc' ? '▲' : '▼' }}
+            </span>
+          </th>
+
+          <th class="col-hide-md">Categoria</th>
+
+          <th class="col-hide-md">Amostra</th>
+
+          <th>Prazos</th>
+
+          <th>Valor</th>
+
+          <th>Status</th>
+
+          <th class="actions-header">Ações</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let e of exames" [class.inactive-row]="!e.ativo">
+
+          <td class="cell-mono">{{ e.codigo }}</td>
+
+          <td>
+            <span class="cell-name">{{ e.nome }}</span>
+          </td>
+
+          <td class="col-hide-md cell-muted">
+            {{ e.categoria || '-' }}
+          </td>
+
+          <td class="col-hide-md cell-muted">
+            {{ e.tipoAmostra }}
+          </td>
+
+          <td class="cell-muted">
+            {{ e.prazoDias }} dias
+          </td>
+
+          <td class="cell-mono">
+            {{ e.valor ? (e.valor | currency:'BRL') : '-' }}
+          </td>
+
+          <td>
+            <span class="badge" [ngClass]="e.ativo ? 'badge-green' : 'badge-gray'">
+              {{ e.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+
+          <td>
+
+            <div class="action-buttons" *ngIf="confirmDeleteId !== e.id">
+
+              <button
+                type="button"
+                class="action-btn edit-btn"
+                *ngIf="auth?.canEdit?.()"
+                [routerLink]="['/exames', e.id]"
+                title="Editar"
+              >
+                ✏️
+              </button>
+
+              <button
+                type="button"
+                class="action-btn delete-btn"
+                *ngIf="auth?.canDelete?.()"
+                (click)="askDelete(e.id!)"
+                title="Excluir"
+              >
+                🗑️
+              </button>
+
+            </div>
+
+            <!-- CONFIRM DELETE -->
+            <div class="confirm-delete-actions animate-fade-in"
+                 *ngIf="confirmDeleteId === e.id">
+
+              <span class="confirm-text">Excluir?</span>
+
+              <button class="confirm-btn yes-btn"
+                      (click)="deleteExame(e.id!)">
+                Sim
+              </button>
+
+              <button class="confirm-btn no-btn"
+                      (click)="cancelDelete()">
+                Não
+              </button>
+
+            </div>
+
+          </td>
+        </tr>
+
+        <!-- EMPTY -->
+        <tr *ngIf="exames.length === 0 && !loading()">
+          <td colspan="8">
+            <div class="empty-state">
+
+              <div class="empty-state-icon">
+                {{ hasActiveSearch ? '🔍' : '🧪' }}
+              </div>
+
+              @if (hasActiveSearch) {
+                <p>
+                  Nenhum exame encontrado para <strong>{{ searchQuery }}</strong>.
+                </p>
+                <button class="empty-cta btn-link" (click)="clearSearch()">
+                  Limpar busca
+                </button>
+              } @else {
+                <p>Nenhum exame cadastrado.</p>
+                <a routerLink="/exames/novo" class="empty-cta">
+                  Cadastrar primeiro exame
+                </a>
+              }
+
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- PAGINATION -->
+    <footer class="table-footer" *ngIf="totalElements > 0">
+
+      <span class="pagination-info">
+        Página {{ currentPage + 1 }} de {{ totalPages || 1 }}
+        · {{ exames.length }} de {{ totalElements }}
+      </span>
+
+      <div class="pagination-controls">
+
+        <button
+          class="page-btn btn-sm"
+          [disabled]="currentPage === 0 || loading()"
+          (click)="changePage(currentPage - 1)"
+        >
+          Anterior
+        </button>
+
+        <button
+          class="page-btn btn-sm"
+          [disabled]="currentPage >= totalPages - 1 || loading()"
+          (click)="changePage(currentPage + 1)"
+        >
+          Próxima
+        </button>
+
+      </div>
+    </footer>
+
+  </div>
+</div>

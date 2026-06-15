@@ -1,0 +1,172 @@
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil, timeout } from 'rxjs';
+
+import { ExameService } from '../../services/exame.service';
+import { Exame } from '../../models/exame.model';
+
+
+import { ToastService } from '../../../../core/services/toast.service';
+
+@Component({
+  selector: 'app-exame-list',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './exame-list.component.html',
+  styleUrls: ['./exame-list.component.css']
+})
+export class ExameListComponent implements OnInit, OnDestroy {
+  @ViewChild('searchInput') searchInput?: ElementRef<HTMLInputElement>;
+
+  private exameService = inject(ExameService);
+  private toast = inject(ToastService);
+  private router = inject(Router);
+
+  private readonly destroy$ = new Subject<void>();
+  private readonly searchChanges$ = new Subject<string>();
+
+  exames: Exame[] = [];
+
+  currentPage = 0;
+  pageSize = 10;
+  totalPages = 0;
+  totalElements = 0;
+
+  sortBy = 'nome';
+  sortDir = 'asc';
+
+  searchQuery = '';
+
+  loading = signal(false);
+
+  confirmDeleteId: number | null = null;
+
+  private readonly sortLabels: Record<string, string> = {
+    nome: 'nome',
+    codigo: 'código',
+    categoria: 'categoria'
+  };
+
+  get sortLabel(): string {
+    return this.sortLabels[this.sortBy] ?? this.sortBy;
+  }
+
+  get hasActiveSearch(): boolean {
+    return this.searchQuery.trim().length > 0;
+  }
+
+  get fillerRows(): null[] {
+    if (this.loading() || this.exames.length === 0) return [];
+    const missing = this.pageSize - this.exames.length;
+    return missing > 0 ? Array.from({ length: missing }, () => null) : [];
+  }
+
+  ngOnInit(): void {
+    this.searchChanges$
+      .pipe(
+        debounceTime(350),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((term) => {
+        this.searchQuery = term;
+        this.currentPage = 0;
+        this.loadExames();
+      });
+
+    this.loadExames();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQuery = value;
+    this.searchChanges$.next(value);
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    if (this.searchInput?.nativeElement) {
+      this.searchInput.nativeElement.value = '';
+    }
+    this.currentPage = 0;
+    this.loadExames();
+  }
+
+  loadExames(): void {
+    this.loading.set(true);
+
+    this.exameService
+      .getAll(this.currentPage, this.pageSize, this.sortBy, this.sortDir, this.searchQuery)
+      .pipe(
+        timeout(15000),
+        finalize(() => this.loading.set(false))
+      )
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.exames = response.data.content ?? [];
+            this.totalPages = response.data.totalPages ?? 0;
+            this.totalElements = response.data.totalElements ?? 0;
+          } else {
+            this.toast.error(response.message || 'Falha ao carregar exames.');
+          }
+        },
+        error: (err) => {
+          if (err.name === 'TimeoutError') {
+            this.toast.error('O servidor demorou para responder. Verifique o backend.');
+          } else {
+            this.toast.error(err.error?.message || 'Erro ao conectar com o servidor.');
+          }
+        }
+      });
+  }
+
+  changePage(page: number): void {
+    if (page >= 0 && page < this.totalPages) {
+      this.currentPage = page;
+      this.loadExames();
+    }
+  }
+
+  setSort(column: string): void {
+    if (this.sortBy === column) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = column;
+      this.sortDir = 'asc';
+    }
+    this.currentPage = 0;
+    this.loadExames();
+  }
+
+  askDelete(id: number): void {
+    this.confirmDeleteId = id;
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
+  }
+
+  deleteExame(id: number): void {
+    this.exameService.delete(id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.toast.success('Exame removido com sucesso.');
+          this.confirmDeleteId = null;
+          this.loadExames();
+        } else {
+          this.toast.error(response.message || 'Erro ao remover exame.');
+        }
+      },
+      error: () => {
+        this.toast.error('Erro ao remover exame.');
+      }
+    });
+  }
+}

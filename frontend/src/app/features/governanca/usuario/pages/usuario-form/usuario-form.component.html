@@ -1,0 +1,111 @@
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+    <a routerLink="/governanca/usuarios" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Voltar
+    </a>
+    <h1 class="page-title-sm">{{ isEditMode ? 'Editar usuário' : 'Novo usuário' }}</h1>
+    <p class="page-subtitle">{{ isEditMode ? 'Atualize dados e permissões da conta.' : 'Preencha os dados para criar uma conta de acesso.' }}</p>
+  </header>
+
+  <div class="glass-card form-card">
+    <div class="loader-overlay" *ngIf="loading">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando dados do usuário...</p>
+      </div>
+    </div>
+
+    <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <div class="form-group">
+        <label for="nome" class="form-label">Nome *</label>
+        <input
+          type="text"
+          id="nome"
+          formControlName="nome"
+          class="form-control"
+          [class.is-invalid]="f['nome'].touched && f['nome'].invalid"
+          placeholder="Ex: Maria da Silva"
+        />
+        <div class="invalid-feedback" *ngIf="f['nome'].touched && f['nome'].errors">
+          <span *ngIf="f['nome'].errors['required']">O nome é obrigatório.</span>
+          <span *ngIf="f['nome'].errors['maxlength']">O nome não deve exceder 150 caracteres.</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-half">
+          <label for="email" class="form-label">E-mail *</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [class.is-invalid]="f['email'].touched && f['email'].invalid"
+            placeholder="exemplo@email.com"
+          />
+          <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].errors">
+            <span *ngIf="f['email'].errors['required']">O e-mail é obrigatório.</span>
+            <span *ngIf="f['email'].errors['email']">Por favor, insira um e-mail válido.</span>
+            <span *ngIf="f['email'].errors['maxlength']">O e-mail não deve exceder 100 caracteres.</span>
+          </div>
+        </div>
+
+        <div class="form-group col-half">
+          <label for="perfil" class="form-label">Perfil *</label>
+          <select
+            id="perfil"
+            formControlName="perfil"
+            class="form-control"
+            [class.is-invalid]="f['perfil'].touched && f['perfil'].invalid"
+          >
+            <option value="" disabled>Selecione...</option>
+            <option value="ADMIN">Administrador</option>
+            <option value="OPERADOR">Operador</option>
+            <option value="VISUALIZADOR">Visualizador</option>
+          </select>
+          <div class="invalid-feedback" *ngIf="f['perfil'].touched && f['perfil'].errors">
+            <span *ngIf="f['perfil'].errors['required']">Selecione um perfil.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-half">
+          <label for="senha" class="form-label">{{ isEditMode ? 'Senha (opcional)' : 'Senha *' }}</label>
+          <input
+            type="password"
+            id="senha"
+            formControlName="senha"
+            class="form-control"
+            [class.is-invalid]="f['senha'].touched && f['senha'].invalid"
+            placeholder="{{ isEditMode ? 'Deixe em branco para não alterar' : 'Mínimo 6 caracteres' }}"
+            autocomplete="new-password"
+          />
+          <div class="invalid-feedback" *ngIf="f['senha'].touched && f['senha'].errors">
+            <span *ngIf="f['senha'].errors['required']">A senha é obrigatória.</span>
+            <span *ngIf="f['senha'].errors['minlength']">A senha deve ter pelo menos 6 caracteres.</span>
+          </div>
+        </div>
+
+        <div class="form-group col-half">
+          <label for="ativo" class="form-label">Status *</label>
+          <select id="ativo" formControlName="ativo" class="form-control">
+            <option [ngValue]="true">Ativo</option>
+            <option [ngValue]="false">Inativo</option>
+          </select>
+        </div>
+      </div>
+
+      <footer class="form-actions">
+        <button type="button" class="btn btn-secondary" routerLink="/governanca/usuarios" [disabled]="saving">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="usuarioForm.invalid || saving">
+          <span class="spinner-sm" *ngIf="saving"></span>
+          {{ saving ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

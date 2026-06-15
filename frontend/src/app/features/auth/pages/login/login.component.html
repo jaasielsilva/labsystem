@@ -1,0 +1,51 @@
+<div class="login-container animate-fade-in">
+  <div class="glass-card login-card">
+    <header class="login-header">
+      <h1>Labsystem</h1>
+      <p class="subtitle">Gestão de laboratório — faça login para continuar</p>
+    </header>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="email" class="form-label">E-mail *</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-control"
+          [class.is-invalid]="f['email'].touched && f['email'].invalid"
+          placeholder="seu@email.com"
+          autocomplete="username"
+        />
+        <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].errors">
+          <span *ngIf="f['email'].errors['required']">O e-mail é obrigatório.</span>
+          <span *ngIf="f['email'].errors['email']">Informe um e-mail válido.</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="senha" class="form-label">Senha *</label>
+        <input
+          id="senha"
+          type="password"
+          formControlName="senha"
+          class="form-control"
+          [class.is-invalid]="f['senha'].touched && f['senha'].invalid"
+          placeholder="Sua senha"
+          autocomplete="current-password"
+        />
+        <div class="invalid-feedback" *ngIf="f['senha'].touched && f['senha'].errors">
+          <span *ngIf="f['senha'].errors['required']">A senha é obrigatória.</span>
+          <span *ngIf="f['senha'].errors['minlength']">Mínimo de 6 caracteres.</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary login-btn" [disabled]="loginForm.invalid || loading">
+        <span class="spinner-sm" *ngIf="loading"></span>
+        {{ loading ? 'Entrando...' : 'Entrar' }}
+      </button>
+    </form>
+
+    <p class="dev-hint">Dev: admin@labsystem.local / admin123</p>
+  </div>
+</div>

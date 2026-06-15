@@ -1,0 +1,79 @@
+<div class="shell" [class.sidebar-open]="sidebarOpen()">
+  <div class="sidebar-backdrop" (click)="closeSidebar()" aria-hidden="true"></div>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-icon">🧬</span>
+      <div>
+        <p class="brand-name">Labsystem</p>
+        <p class="brand-tag">Gestão laboratorial</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (section of nav.sections(); track section.id) {
+        <div class="nav-section">
+          <p class="nav-section-label">{{ section.label }}</p>
+          @for (item of section.items; track item.id) {
+            @if (item.disabled) {
+              <span class="nav-item nav-item-disabled" [attr.title]="item.disabledLabel ?? 'Em breve'">
+                <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+                <span class="nav-label">{{ item.label }}</span>
+                <span class="nav-badge">{{ item.disabledLabel ?? 'Em breve' }}</span>
+              </span>
+            } @else {
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                class="nav-item"
+                (click)="closeSidebar()"
+              >
+                <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+                <span class="nav-label">{{ item.label }}</span>
+              </a>
+            }
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="sidebar-tenant">
+      <span class="tenant-icon" aria-hidden="true">🏢</span>
+      <div class="tenant-meta">
+        <p class="tenant-label">Empresa</p>
+        <p class="tenant-name">{{ tenant.empresaNome() }}</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="shell-main">
+    <header class="topbar">
+      <button
+        type="button"
+        class="menu-toggle"
+        (click)="toggleSidebar()"
+        aria-label="Abrir menu"
+      >
+        ☰
+      </button>
+
+      <div class="topbar-context">
+        <span class="topbar-empresa">{{ tenant.empresaNome() }}</span>
+      </div>
+
+      @if (auth.usuarioAtual(); as usuario) {
+        <div class="topbar-user">
+          <div class="user-meta">
+            <span class="user-name">{{ usuario.nome }}</span>
+            <span class="user-role">{{ perfilLabel(usuario.perfil) }}</span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="logout()">Sair</button>
+        </div>
+      }
+    </header>
+
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

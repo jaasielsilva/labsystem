@@ -1,0 +1,285 @@
+.playground {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+  align-items: start;
+}
+
+.playground-nav {
+  position: sticky;
+  top: 80px;
+  padding: 20px;
+}
+
+.nav-brand {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.nav-tag {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.playground-nav nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: var(--transition-smooth);
+}
+
+.nav-link:hover {
+  background: var(--surface-muted);
+  color: var(--text-primary);
+}
+
+.nav-back {
+  display: block;
+  margin-top: 24px;
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.playground-main {
+  min-width: 0;
+}
+
+.playground-hero {
+  margin-bottom: 32px;
+}
+
+.preview-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  margin-bottom: 12px;
+}
+
+.ds-section {
+  margin-bottom: 24px;
+  padding: 28px;
+}
+
+.ds-section-pad {
+  padding: 0 24px;
+  padding-top: 24px;
+}
+
+.token-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.token-swatch {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.swatch-color {
+  height: 72px;
+}
+
+.swatch-meta {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+}
+
+.swatch-meta strong {
+  color: var(--text-primary);
+}
+
+.swatch-meta span,
+.swatch-meta code {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.token-extra {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.token-box {
+  padding: 16px 24px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.glass-mini {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.glass-mini.bordered {
+  border-color: #cbd5e1;
+}
+
+.glass-mini.glow {
+  box-shadow: var(--shadow-glow);
+  border-color: #5eead4;
+}
+
+.type-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.type-h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.type-body {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.type-muted {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.demo-form {
+  max-width: 560px;
+}
+
+.feedback-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.feedback-box {
+  padding: 24px;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.relative-box {
+  position: relative;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.text-muted-cell {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.accent-cell {
+  color: var(--color-accent);
+}
+
+.pagination-demo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+}
+
+.layout-panel {
+  padding: 24px;
+}
+
+.layout-panel .type-h2 {
+  margin-bottom: 4px;
+}
+
+.layout-panel .type-muted {
+  margin-bottom: 20px;
+}
+
+.premium-table.compact th,
+.premium-table.compact td {
+  padding: 12px 16px;
+}
+
+.playground-footer {
+  margin: 32px 0 48px;
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.playground-footer code {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .playground {
+    grid-template-columns: 1fr;
+  }
+
+  .playground-nav {
+    position: static;
+  }
+
+  .playground-nav nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .feedback-row,
+  .layout-grid {
+    grid-template-columns: 1fr;
+  }
+}

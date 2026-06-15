@@ -1,0 +1,160 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <div class="title-group">
+      <h1 class="page-title-sm">Clientes</h1>
+      <p class="page-subtitle">Pacientes e clientes do laboratório</p>
+    </div>
+    <button class="btn btn-primary btn-sm" routerLink="/clientes/novo" *ngIf="auth.canEdit()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Novo cliente
+    </button>
+  </header>
+
+  <div class="glass-card table-wrapper">
+    <div class="table-toolbar">
+      <div class="table-search">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input
+          #searchInput
+          type="search"
+          class="form-control table-search-input"
+          placeholder="Buscar por nome, e-mail ou CPF..."
+          (input)="onSearchInput($event)"
+          aria-label="Buscar clientes"
+        />
+        <button
+          type="button"
+          class="search-clear"
+          *ngIf="hasActiveSearch"
+          (click)="clearSearch()"
+          aria-label="Limpar busca"
+        >
+          ×
+        </button>
+      </div>
+      <div class="table-toolbar-end">
+        <span class="table-toolbar-meta">
+          @if (loading()) {
+            Carregando...
+          } @else if (totalElements === 0 && hasActiveSearch) {
+            Nenhum resultado
+          } @else if (totalElements === 0) {
+            Nenhum registro
+          } @else {
+            {{ totalElements }} {{ totalElements === 1 ? 'cliente' : 'clientes' }}
+          }
+        </span>
+        @if (totalElements > 0 && !loading()) {
+          <span class="stat-chip">Ordenado por {{ sortLabel }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="loader-overlay" *ngIf="loading() || editingLoading()">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label" *ngIf="editingLoading()">Abrindo edição...</p>
+      </div>
+    </div>
+
+    <table class="premium-table dense">
+      <thead>
+        <tr>
+          <th (click)="setSort('nome')" class="sortable">
+            Nome
+            <span class="sort-icon" *ngIf="sortBy === 'nome'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th>Status</th>
+          <th (click)="setSort('cpf')" class="sortable">
+            CPF
+            <span class="sort-icon" *ngIf="sortBy === 'cpf'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th (click)="setSort('email')" class="sortable">
+            E-mail
+            <span class="sort-icon" *ngIf="sortBy === 'email'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th class="col-hide-md">Telefone</th>
+          <th class="col-hide-lg">Nascimento</th>
+          <th class="actions-header">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of clientes" [class.inactive-row]="!c.ativo">
+          <td>
+            <span class="cell-name">{{ c.nome }}</span>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="c.ativo ? 'badge-green' : 'badge-gray'">
+              {{ c.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </td>
+          <td class="cell-mono" [title]="'CPF parcialmente oculto (LGPD)'">{{ maskCpf(c.cpf) }}</td>
+          <td class="email-col">{{ c.email }}</td>
+          <td class="col-hide-md cell-muted">{{ formatPhone(c.telefone) }}</td>
+          <td class="col-hide-lg cell-muted">{{ c.dataNascimento | date:'dd/MM/yyyy':'UTC' }}</td>
+          <td>
+            <div class="action-buttons" *ngIf="confirmDeleteId !== c.id">
+              <button
+                type="button"
+                class="action-btn edit-btn"
+                *ngIf="auth.canEdit()"
+                (click)="onEdit(c.id!)"
+                [disabled]="editingLoading()"
+                title="Editar"
+                aria-label="Editar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button type="button" class="action-btn delete-btn" *ngIf="auth.canDelete()" (click)="askDelete(c.id!)" title="Remover" aria-label="Remover">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+            <div class="confirm-delete-actions animate-fade-in" *ngIf="confirmDeleteId === c.id">
+              <span class="confirm-text">Remover?</span>
+              <button type="button" class="confirm-btn yes-btn" (click)="deleteCliente(c.id!)">Sim</button>
+              <button type="button" class="confirm-btn no-btn" (click)="cancelDelete()">Não</button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngFor="let _ of fillerRows" class="row-filler" aria-hidden="true">
+          <td><span class="cell-name filler-spacer">&nbsp;</span></td>
+          <td><span class="badge badge-gray filler-spacer">&nbsp;</span></td>
+          <td class="cell-mono filler-spacer">&nbsp;</td>
+          <td class="email-col filler-spacer">&nbsp;</td>
+          <td class="col-hide-md cell-muted filler-spacer">&nbsp;</td>
+          <td class="col-hide-lg cell-muted filler-spacer">&nbsp;</td>
+          <td><span class="filler-spacer action-spacer">&nbsp;</span></td>
+        </tr>
+        <tr *ngIf="clientes.length === 0 && !loading()">
+          <td colspan="7">
+            <div class="empty-state">
+              <div class="empty-state-icon">{{ hasActiveSearch ? '🔍' : '👥' }}</div>
+              @if (hasActiveSearch) {
+                <p>Nenhum cliente encontrado para <strong>{{ searchQuery }}</strong>.</p>
+                <button type="button" class="empty-cta btn-link" (click)="clearSearch()">Limpar busca</button>
+              } @else {
+                <p>Nenhum cliente cadastrado.</p>
+                <a *ngIf="auth.canEdit()" routerLink="/clientes/novo" class="empty-cta">Cadastrar primeiro cliente</a>
+              }
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer class="table-footer" *ngIf="totalElements > 0">
+      <span class="pagination-info">
+        Página {{ currentPage + 1 }} de {{ totalPages || 1 }}
+        · {{ clientes.length }} de {{ totalElements }}
+      </span>
+      <div class="pagination-controls">
+        <button type="button" class="page-btn btn-sm" [disabled]="currentPage === 0 || loading()" (click)="changePage(currentPage - 1)">
+          Anterior
+        </button>
+        <button type="button" class="page-btn btn-sm" [disabled]="currentPage >= totalPages - 1 || loading()" (click)="changePage(currentPage + 1)">
+          Próxima
+        </button>
+      </div>
+    </footer>
+  </div>
+</div>

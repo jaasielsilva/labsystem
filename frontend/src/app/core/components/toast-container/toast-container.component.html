@@ -1,0 +1,16 @@
+<div class="toast-viewport" aria-live="polite" aria-relevant="additions">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast toast-{{ toast.type }} animate-fade-in" role="status">
+      <span class="toast-icon" aria-hidden="true">{{ icon(toast) }}</span>
+      <p class="toast-message">{{ toast.message }}</p>
+      <button
+        type="button"
+        class="toast-close"
+        (click)="dismiss(toast.id)"
+        [attr.aria-label]="'Fechar: ' + toast.message"
+      >
+        ×
+      </button>
+    </div>
+  }
+</div>
