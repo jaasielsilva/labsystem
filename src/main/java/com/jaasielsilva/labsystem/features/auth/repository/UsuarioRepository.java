@@ -1,5 +1,6 @@
 package com.jaasielsilva.labsystem.features.auth.repository;
 
+import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
 import com.jaasielsilva.labsystem.features.auth.entity.Usuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,4 +47,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     );
 
     long countByEmpresa_Id(Long empresaId);
+
+    long countByPerfil(Perfil perfil);
 }

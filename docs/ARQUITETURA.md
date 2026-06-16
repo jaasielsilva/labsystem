@@ -242,10 +242,21 @@ clientes | exames | pedidos | …
 | **2 — Governança** | CRUD Empresa + vínculo usuário ↔ empresa | ✅ |
 | **3 — SaaS** | Planos, limites, onboarding multi-laboratório | 🔲 |
 
+### Perfis e escopos
+
+| Perfil | Escopo | API | Front |
+|--------|--------|-----|-------|
+| `SUPER_ADMIN` | Plataforma | `/api/v1/platform/**` | `/plataforma/*` |
+| `ADMIN` | Tenant (laboratório) | `/api/v1/*` filtrado por JWT | Operacional + governança tenant |
+| `OPERADOR` / `VISUALIZADOR` | Tenant | leitura/escrita conforme RBAC | Operacional |
+
+- JWT claim `scope`: `PLATFORM` ou `TENANT`
+- Empresa `tipo`: `PLATAFORMA` (sentinela) ou `LABORATORIO`
+
 ### O que **não** confundir
 
-- **Módulo Empresa (governança):** tela para ADMIN cadastrar laboratórios.
-- **Isolamento tenant-ready:** cada registro de negócio pertence a uma empresa; usuário só vê dados da sua.
+- **Plataforma (SUPER_ADMIN):** gerencia laboratórios e usuários globais.
+- **Tenant (ADMIN):** gerencia usuários e dados do próprio laboratório.
 
 ---
 

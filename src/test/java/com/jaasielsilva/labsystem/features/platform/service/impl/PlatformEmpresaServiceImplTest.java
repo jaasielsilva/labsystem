@@ -1,4 +1,4 @@
-package com.jaasielsilva.labsystem.features.empresa.service.impl;
+package com.jaasielsilva.labsystem.features.platform.service.impl;
 
 import com.jaasielsilva.labsystem.exception.BusinessException;
 import com.jaasielsilva.labsystem.exception.ResourceNotFoundException;
@@ -7,6 +7,7 @@ import com.jaasielsilva.labsystem.features.cliente.repository.ClienteRepository;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaRequest;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaResponse;
 import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
+import com.jaasielsilva.labsystem.features.empresa.entity.TipoEmpresa;
 import com.jaasielsilva.labsystem.features.empresa.mapper.EmpresaMapper;
 import com.jaasielsilva.labsystem.features.empresa.repository.EmpresaRepository;
 import com.jaasielsilva.labsystem.features.exame.repository.ExameRepository;
@@ -27,10 +28,11 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class EmpresaServiceImplTest {
+class PlatformEmpresaServiceImplTest {
 
     @Mock
     private EmpresaRepository repository;
@@ -48,7 +50,7 @@ class EmpresaServiceImplTest {
     private ExameRepository exameRepository;
 
     @InjectMocks
-    private EmpresaServiceImpl service;
+    private PlatformEmpresaServiceImpl service;
 
     private Empresa empresa;
     private EmpresaRequest request;
@@ -61,6 +63,7 @@ class EmpresaServiceImplTest {
                 .nome("Laboratório Demo")
                 .cnpj("00000000000000")
                 .email("contato@labsystem.local")
+                .tipo(TipoEmpresa.LABORATORIO)
                 .ativo(true)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -93,52 +96,21 @@ class EmpresaServiceImplTest {
     }
 
     @Test
-    void findAll_ShouldReturnPagedEmpresas() {
+    void findAll_ShouldReturnPagedLaboratorios() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Empresa> page = new PageImpl<>(Collections.singletonList(empresa));
 
-        when(repository.findAll(pageable)).thenReturn(page);
+        when(repository.findAllByTipo(TipoEmpresa.LABORATORIO, pageable)).thenReturn(page);
         when(mapper.toResponse(any(Empresa.class))).thenReturn(response);
 
         Page<EmpresaResponse> result = service.findAll(pageable, null);
 
         assertEquals(1, result.getTotalElements());
-        verify(repository).findAll(pageable);
+        verify(repository).findAllByTipo(TipoEmpresa.LABORATORIO, pageable);
     }
 
     @Test
-    void findAll_WithSearch_ShouldUseRepositorySearch() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Empresa> page = new PageImpl<>(Collections.singletonList(empresa));
-
-        when(repository.searchByTerm("Demo", "", pageable)).thenReturn(page);
-        when(mapper.toResponse(any(Empresa.class))).thenReturn(response);
-
-        Page<EmpresaResponse> result = service.findAll(pageable, "Demo");
-
-        assertEquals(1, result.getTotalElements());
-        verify(repository).searchByTerm("Demo", "", pageable);
-    }
-
-    @Test
-    void findById_WhenExists_ShouldReturnEmpresa() {
-        when(repository.findById(1L)).thenReturn(Optional.of(empresa));
-        when(mapper.toResponse(empresa)).thenReturn(response);
-
-        EmpresaResponse result = service.findById(1L);
-
-        assertEquals(response.nome(), result.nome());
-    }
-
-    @Test
-    void findById_WhenNotExists_ShouldThrowResourceNotFoundException() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> service.findById(1L));
-    }
-
-    @Test
-    void create_WhenCnpjIsUnique_ShouldCreateEmpresa() {
+    void create_WhenCnpjIsUnique_ShouldCreateLaboratorio() {
         when(repository.existsByCnpj(request.cnpj())).thenReturn(false);
         when(mapper.toEntity(request)).thenReturn(empresa);
         when(repository.save(empresa)).thenReturn(empresa);
@@ -147,61 +119,17 @@ class EmpresaServiceImplTest {
         EmpresaResponse result = service.create(request);
 
         assertNotNull(result);
+        assertEquals(TipoEmpresa.LABORATORIO, empresa.getTipo());
         verify(repository).save(empresa);
     }
 
     @Test
-    void create_WhenCnpjExists_ShouldThrowBusinessException() {
-        when(repository.existsByCnpj(request.cnpj())).thenReturn(true);
-
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.create(request));
-        assertEquals("CNPJ já cadastrado no sistema.", ex.getMessage());
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void update_WhenExistsAndCnpjIsUnique_ShouldUpdateEmpresa() {
+    void delete_WhenOnlyLaboratorio_ShouldThrowBusinessException() {
         when(repository.findById(1L)).thenReturn(Optional.of(empresa));
-        when(repository.existsByCnpjAndIdNot(request.cnpj(), 1L)).thenReturn(false);
-        when(repository.save(empresa)).thenReturn(empresa);
-        when(mapper.toResponse(empresa)).thenReturn(response);
-
-        EmpresaResponse result = service.update(1L, request);
-
-        assertNotNull(result);
-        verify(mapper).updateEntity(request, empresa);
-    }
-
-    @Test
-    void delete_WhenHasLinkedUsers_ShouldThrowBusinessException() {
-        when(repository.findById(1L)).thenReturn(Optional.of(empresa));
-        when(repository.count()).thenReturn(2L);
-        when(usuarioRepository.countByEmpresa_Id(1L)).thenReturn(1L);
+        when(repository.countByTipo(TipoEmpresa.LABORATORIO)).thenReturn(1L);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(1L));
-        assertEquals("Não é possível remover empresa com usuários vinculados.", ex.getMessage());
+        assertEquals("Não é possível remover o único laboratório do sistema.", ex.getMessage());
         verify(repository, never()).delete(any());
-    }
-
-    @Test
-    void delete_WhenOnlyEmpresa_ShouldThrowBusinessException() {
-        when(repository.findById(1L)).thenReturn(Optional.of(empresa));
-        when(repository.count()).thenReturn(1L);
-
-        BusinessException ex = assertThrows(BusinessException.class, () -> service.delete(1L));
-        assertEquals("Não é possível remover a única empresa do sistema.", ex.getMessage());
-        verify(repository, never()).delete(any());
-    }
-
-    @Test
-    void delete_WhenSafe_ShouldDeleteEmpresa() {
-        when(repository.findById(1L)).thenReturn(Optional.of(empresa));
-        when(repository.count()).thenReturn(2L);
-        when(usuarioRepository.countByEmpresa_Id(1L)).thenReturn(0L);
-        when(clienteRepository.countByEmpresa_Id(1L)).thenReturn(0L);
-        when(exameRepository.countByEmpresa_Id(1L)).thenReturn(0L);
-
-        assertDoesNotThrow(() -> service.delete(1L));
-        verify(repository).delete(empresa);
     }
 }

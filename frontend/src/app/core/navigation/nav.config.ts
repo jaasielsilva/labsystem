@@ -18,6 +18,26 @@ export interface NavSection {
 
 export const NAV_SECTIONS: NavSection[] = [
   {
+    id: 'plataforma',
+    label: 'Plataforma',
+    items: [
+      {
+        id: 'laboratorios',
+        label: 'Laboratórios',
+        route: '/plataforma/laboratorios',
+        icon: '🏢',
+        roles: ['SUPER_ADMIN']
+      },
+      {
+        id: 'usuarios-globais',
+        label: 'Usuários globais',
+        route: '/plataforma/usuarios',
+        icon: '🔐',
+        roles: ['SUPER_ADMIN']
+      }
+    ]
+  },
+  {
     id: 'operacional',
     label: 'Operacional',
     items: [
@@ -89,13 +109,6 @@ export const NAV_SECTIONS: NavSection[] = [
         roles: ['ADMIN']
       },
       {
-        id: 'empresa',
-        label: 'Empresa e plano',
-        route: '/governanca/empresas',
-        icon: '🏢',
-        roles: ['ADMIN']
-      },
-      {
         id: 'auditoria',
         label: 'Auditoria',
         route: '/governanca/auditoria',
@@ -113,7 +126,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Design System',
         route: '/dev/ui',
         icon: '🎨',
-        roles: ['ADMIN']
+        roles: ['ADMIN', 'SUPER_ADMIN']
       }
     ]
   }

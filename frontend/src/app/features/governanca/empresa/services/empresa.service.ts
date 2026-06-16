@@ -11,7 +11,7 @@ import { ApiResponse } from '../../../../shared/models/api-response.model';
 })
 export class EmpresaService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/empresas`;
+  private apiUrl = `${environment.apiUrl}/platform/empresas`;
 
   getAll(
     page: number = 0,

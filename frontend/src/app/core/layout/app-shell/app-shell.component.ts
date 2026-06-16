@@ -7,6 +7,7 @@ import { TenantContextService } from '../../services/tenant-context.service';
 import { Perfil } from '../../models/usuario.model';
 
 const PERFIL_LABELS: Record<Perfil, string> = {
+  SUPER_ADMIN: 'Super Admin',
   ADMIN: 'Administrador',
   OPERADOR: 'Operador',
   VISUALIZADOR: 'Visualizador'

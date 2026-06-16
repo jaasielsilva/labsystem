@@ -1,0 +1,68 @@
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+    <a routerLink="/plataforma/usuarios" class="back-link">← Voltar</a>
+    <h1 class="page-title-sm">{{ isEditMode ? 'Editar usuário' : 'Novo usuário' }}</h1>
+    <p class="page-subtitle">Vincule a conta a um laboratório e defina o perfil de acesso.</p>
+  </header>
+
+  <div class="glass-card form-card">
+    <div class="loader-overlay" *ngIf="loading">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando dados do usuário...</p>
+      </div>
+    </div>
+
+    <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <div class="form-group">
+        <label for="empresaId" class="form-label">Laboratório *</label>
+        <select id="empresaId" formControlName="empresaId" class="form-control" [disabled]="loadingLaboratorios">
+          <option [ngValue]="null" disabled>Selecione o laboratório...</option>
+          <option *ngFor="let lab of laboratorios" [ngValue]="lab.id">{{ lab.nome }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="nome" class="form-label">Nome *</label>
+        <input type="text" id="nome" formControlName="nome" class="form-control" placeholder="Ex: Maria da Silva" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-half">
+          <label for="email" class="form-label">E-mail *</label>
+          <input type="email" id="email" formControlName="email" class="form-control" placeholder="exemplo@email.com" />
+        </div>
+        <div class="form-group col-half">
+          <label for="perfil" class="form-label">Perfil *</label>
+          <select id="perfil" formControlName="perfil" class="form-control">
+            <option value="" disabled>Selecione...</option>
+            <option value="ADMIN">Administrador</option>
+            <option value="OPERADOR">Operador</option>
+            <option value="VISUALIZADOR">Visualizador</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group col-half">
+          <label for="senha" class="form-label">{{ isEditMode ? 'Senha (opcional)' : 'Senha *' }}</label>
+          <input type="password" id="senha" formControlName="senha" class="form-control" autocomplete="new-password" />
+        </div>
+        <div class="form-group col-half">
+          <label for="ativo" class="form-label">Status *</label>
+          <select id="ativo" formControlName="ativo" class="form-control">
+            <option [ngValue]="true">Ativo</option>
+            <option [ngValue]="false">Inativo</option>
+          </select>
+        </div>
+      </div>
+
+      <footer class="form-actions">
+        <button type="button" class="btn btn-secondary" routerLink="/plataforma/usuarios" [disabled]="saving">Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="usuarioForm.invalid || saving">
+          {{ saving ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

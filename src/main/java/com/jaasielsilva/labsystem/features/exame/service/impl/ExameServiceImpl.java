@@ -31,7 +31,7 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional(readOnly = true)
     public Page<ExameResponse> findAll(Pageable pageable, String search) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
 
         if (search == null || search.isBlank()) {
             log.info("Buscando exames paginados para empresaId={}", empresaId);
@@ -46,7 +46,7 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional(readOnly = true)
     public ExameResponse findById(Long id) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Buscando exame por id={} empresaId={}", id, empresaId);
         Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado com ID: " + id));
@@ -56,7 +56,7 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional
     public ExameResponse create(ExameRequest request) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Criando novo exame para empresaId={}", empresaId);
 
         if (repository.existsByCodigoAndEmpresaId(request.codigo(), empresaId)) {
@@ -73,7 +73,7 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional
     public ExameResponse update(Long id, ExameRequest request) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Atualizando exame id={} empresaId={}", id, empresaId);
 
         Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
@@ -91,7 +91,7 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Deletando exame id={} empresaId={}", id, empresaId);
         Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado com ID: " + id));

@@ -1,5 +1,6 @@
 package com.jaasielsilva.labsystem.features.auth.service.impl;
 
+import com.jaasielsilva.labsystem.common.AccessScope;
 import com.jaasielsilva.labsystem.config.JwtService;
 import com.jaasielsilva.labsystem.exception.BusinessException;
 import com.jaasielsilva.labsystem.features.auth.dto.LoginRequest;
@@ -94,7 +95,8 @@ public class AuthServiceImpl implements AuthService {
                 usuario.getEmail(),
                 usuario.getPerfil(),
                 usuario.getEmpresa().getId(),
-                usuario.getEmpresa().getNome()
+                usuario.getEmpresa().getNome(),
+                AccessScope.fromPerfil(usuario.getPerfil())
         );
     }
 }

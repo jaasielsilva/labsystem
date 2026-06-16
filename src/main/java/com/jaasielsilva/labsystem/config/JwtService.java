@@ -1,5 +1,6 @@
 package com.jaasielsilva.labsystem.config;
 
+import com.jaasielsilva.labsystem.common.AccessScope;
 import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -18,6 +19,7 @@ public class JwtService {
 
     private static final String CLAIM_PERFIL = "perfil";
     private static final String CLAIM_EMPRESA_ID = "empresaId";
+    private static final String CLAIM_SCOPE = "scope";
     private static final String CLAIM_TYPE = "type";
     private static final String TYPE_ACCESS = "access";
     private static final String TYPE_REFRESH = "refresh";
@@ -79,6 +81,7 @@ public class JwtService {
         claims.put(CLAIM_PERFIL, perfil.name());
         claims.put(CLAIM_TYPE, type);
         claims.put(CLAIM_EMPRESA_ID, empresaId);
+        claims.put(CLAIM_SCOPE, AccessScope.fromPerfil(perfil).name());
 
         return Jwts.builder()
                 .subject(email)

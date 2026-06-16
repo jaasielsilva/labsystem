@@ -24,7 +24,7 @@ public class UsuarioController {
     private final UsuarioService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<UsuarioResponse>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -41,21 +41,21 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioResponse>> getById(@PathVariable Long id) {
         UsuarioResponse response = service.findById(id);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioResponse>> create(@Valid @RequestBody UsuarioRequest request) {
         UsuarioResponse response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Usuário criado com sucesso", response));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UsuarioResponse>> update(
             @PathVariable Long id, 
             @Valid @RequestBody UsuarioRequest request) {

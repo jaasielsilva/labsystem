@@ -39,6 +39,11 @@ public class Empresa {
     @Column(length = 2)
     private String uf;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20, columnDefinition = "VARCHAR(20)")
+    @Builder.Default
+    private TipoEmpresa tipo = TipoEmpresa.LABORATORIO;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean ativo = true;

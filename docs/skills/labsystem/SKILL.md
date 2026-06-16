@@ -42,7 +42,7 @@ Snapshot sincronizado com o repositório. Atualizar ao fechar cada entrega.
 |------|----------------|
 | Backend | `src/` na raiz, Spring Boot 3.2, Flyway, `ApiResponse`, exceptions |
 | **Auth JWT** | `features/auth/`, login/refresh/me, BCrypt, filtro JWT, `@PreAuthorize` |
-| Perfis | `ADMIN`, `OPERADOR`, `VISUALIZADOR` — seed dev no `DataSeeder` |
+| Perfis | `SUPER_ADMIN`, `ADMIN`, `OPERADOR`, `VISUALIZADOR` — seed dev no `DataSeeder` |
 | Módulo **Cliente** | CRUD back + front, RBAC (delete só ADMIN), testes unitários |
 | Frontend `core/` | `auth.service`, interceptors, `authGuard`, `roleGuard` |
 | Login | `/login` — redireciona rotas protegidas |
@@ -53,13 +53,15 @@ Snapshot sincronizado com o repositório. Atualizar ao fechar cada entrega.
 | **Toast LS1** | `ToastService` + `app-toast-container` — feedback global sucesso/erro |
 | **TenantContextService** | Lê `empresaId` / `empresaNome` do `/auth/me` após login |
 | **Fundação tenant-ready (Fase 1)** | `empresas`, `empresa_id`, JWT `empresaId`, filtro nos services Cliente/Exame/Usuário |
-| Módulo **Empresa** (governança) | CRUD back + front em `/governanca/empresas` (somente ADMIN) |
+| **SUPER_ADMIN (plataforma)** | Escopo plataforma: `/api/v1/platform/**`, front `/plataforma/*` — sem acesso operacional |
+| Módulo **Empresa** (governança) | CRUD laboratórios em `/plataforma/laboratorios` (somente SUPER_ADMIN) |
 | Módulo **Exame** (catálogo) | CRUD back + front em `/exames`, tenant-aware, seed demo, testes unitários |
 
 **Usuários dev (senha no `DataSeeder`):**
 
 | E-mail | Senha | Perfil |
 |--------|-------|--------|
+| super@labsystem.local | super123 | SUPER_ADMIN |
 | admin@labsystem.local | admin123 | ADMIN |
 | operador@labsystem.local | operador123 | OPERADOR |
 | visualizador@labsystem.local | visualizador123 | VISUALIZADOR |
@@ -282,7 +284,10 @@ Textos em **português claro** — nunca "Erro 500" ou jargão técnico na UI.
 
 Obrigatório para produto multi-usuário ou SaaS.
 
-**Perfis iniciais:** `ADMIN`, `OPERADOR`, `VISUALIZADOR`.
+**Perfis iniciais:** `SUPER_ADMIN`, `ADMIN`, `OPERADOR`, `VISUALIZADOR`.
+
+- `SUPER_ADMIN` — dono/operador da plataforma; escopo `/api/v1/platform/**`; sem acesso a clientes/exames (impersonação na Fase 3)
+- `ADMIN` — gestor do laboratório (tenant); escopo filtrado por `empresa_id` do JWT
 
 - Permissão validada no **backend** (`@PreAuthorize` ou checagem no Service)
 - Frontend esconde ação; backend retorna 403 se sem permissão
@@ -296,7 +301,7 @@ Não implementar SaaS completo de uma vez. Seguir **três fases** — a Fase 1 d
 | Fase | Nome | O que entrega | Status |
 |------|------|---------------|--------|
 | **1** | **Tenant-ready** | Banco e código prontos para isolamento; operação continua com 1 empresa | ✅ |
-| **2** | **Governança** | CRUD de empresas (`/governanca/empresas`); só ADMIN cria/edita | ✅ |
+| **2** | **Governança** | CRUD laboratórios (`/plataforma/laboratorios`); usuários globais; SUPER_ADMIN | ✅ |
 | **3** | **SaaS completo** | Planos, limites, onboarding, múltiplos laboratórios em produção | 🔲 |
 
 #### Fase 1 — Tenant-ready (fazer agora)

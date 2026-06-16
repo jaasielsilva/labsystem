@@ -81,12 +81,25 @@ export class AuthService {
     return !!usuario && perfis.includes(usuario.perfil);
   }
 
+  isSuperAdmin(): boolean {
+    return this.hasRole('SUPER_ADMIN');
+  }
+
+  isTenantUser(): boolean {
+    const usuario = this.usuarioAtual();
+    return !!usuario && usuario.perfil !== 'SUPER_ADMIN';
+  }
+
+  getHomeRoute(): string {
+    return this.isSuperAdmin() ? '/plataforma/laboratorios' : '/clientes';
+  }
+
   canEdit(): boolean {
-    return this.hasRole('ADMIN', 'OPERADOR');
+    return this.hasRole('ADMIN', 'OPERADOR', 'SUPER_ADMIN');
   }
 
   canDelete(): boolean {
-    return this.hasRole('ADMIN');
+    return this.hasRole('ADMIN', 'SUPER_ADMIN');
   }
 
   private persistSession(data: LoginResponse): void {

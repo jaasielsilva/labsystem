@@ -1,5 +1,6 @@
 package com.jaasielsilva.labsystem.features.auth.dto;
 
+import com.jaasielsilva.labsystem.common.AccessScope;
 import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
 
 public record UsuarioResponse(
@@ -8,5 +9,6 @@ public record UsuarioResponse(
     String email,
     Perfil perfil,
     Long empresaId,
-    String empresaNome
+    String empresaNome,
+    AccessScope scope
 ) {}

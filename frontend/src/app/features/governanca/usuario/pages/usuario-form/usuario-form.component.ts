@@ -7,8 +7,6 @@ import { UsuarioService } from '../../services/usuario.service';
 import { Usuario } from '../../models/usuario.model';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { TenantContextService } from '../../../../../core/services/tenant-context.service';
-import { EmpresaService } from '../../../empresa/services/empresa.service';
-import { Empresa } from '../../../empresa/models/empresa.model';
 
 @Component({
   selector: 'app-usuario-form',
@@ -20,9 +18,8 @@ import { Empresa } from '../../../empresa/models/empresa.model';
 export class UsuarioFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private usuarioService = inject(UsuarioService);
-  private empresaService = inject(EmpresaService);
   private toast = inject(ToastService);
-  private tenant = inject(TenantContextService);
+  protected tenant = inject(TenantContextService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -31,12 +28,9 @@ export class UsuarioFormComponent implements OnInit {
   usuarioId?: number;
   loading = false;
   saving = false;
-  loadingEmpresas = false;
-  empresas: Empresa[] = [];
 
   ngOnInit(): void {
     this.initForm();
-    this.loadEmpresas();
     this.checkEditMode();
   }
 
@@ -45,37 +39,9 @@ export class UsuarioFormComponent implements OnInit {
       nome: ['', [Validators.required, Validators.maxLength(150)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
       perfil: ['', [Validators.required]],
-      empresaId: [null as number | null, [Validators.required]],
       ativo: [true, [Validators.required]],
       senha: ['', [Validators.minLength(6)]]
     });
-  }
-
-  private loadEmpresas(): void {
-    this.loadingEmpresas = true;
-
-    this.empresaService
-      .getAll(0, 100, 'nome', 'asc')
-      .pipe(finalize(() => { this.loadingEmpresas = false; }))
-      .subscribe({
-        next: (response) => {
-          if (response.success && response.data) {
-            this.empresas = response.data.content ?? [];
-
-            if (!this.isEditMode && this.usuarioForm.get('empresaId')?.value == null) {
-              const defaultEmpresaId = this.tenant.empresaId();
-              if (defaultEmpresaId && this.empresas.some((e) => e.id === defaultEmpresaId)) {
-                this.usuarioForm.patchValue({ empresaId: defaultEmpresaId });
-              }
-            }
-          } else {
-            this.toast.error(response.message || 'Erro ao carregar empresas.');
-          }
-        },
-        error: () => {
-          this.toast.error('Erro ao carregar lista de empresas.');
-        }
-      });
   }
 
   private checkEditMode(): void {
@@ -105,7 +71,6 @@ export class UsuarioFormComponent implements OnInit {
       nome: userData.nome,
       email: userData.email,
       perfil: userData.perfil,
-      empresaId: userData.empresaId ?? null,
       ativo: userData.ativo
     });
     this.loading = false;
@@ -143,7 +108,6 @@ export class UsuarioFormComponent implements OnInit {
       nome: formValue.nome,
       email: formValue.email,
       perfil: formValue.perfil,
-      empresaId: formValue.empresaId,
       ativo: formValue.ativo
     };
 

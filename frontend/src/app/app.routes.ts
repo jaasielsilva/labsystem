@@ -1,17 +1,14 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from './core/guards/auth.guard';
-
 import { roleGuard } from './core/guards/role.guard';
+import { superAdminGuard } from './core/guards/super-admin.guard';
+import { tenantGuard } from './core/guards/tenant.guard';
 
 import { AppShellComponent } from './core/layout/app-shell/app-shell.component';
-
 import { PlaceholderComponent } from './core/pages/placeholder/placeholder.component';
 
-
-
 export const routes: Routes = [
-
   {
     path: 'login',
     loadComponent: () => import('./features/auth/pages/login/login.component').then(m => m.LoginComponent)
@@ -22,21 +19,38 @@ export const routes: Routes = [
     component: AppShellComponent,
     canActivate: [authGuard],
     children: [
-
       {
         path: 'clientes',
+        canActivate: [tenantGuard],
         loadChildren: () => import('./features/cliente/cliente.routes').then(m => m.CLIENTE_ROUTES)
       },
 
       {
         path: 'exames',
+        canActivate: [tenantGuard],
         loadChildren: () => import('./features/exame/exame.routes').then(m => m.EXAME_ROUTES)
       },
 
       {
         path: 'dev/ui',
-        canActivate: [roleGuard('ADMIN')],
+        canActivate: [roleGuard('ADMIN', 'SUPER_ADMIN')],
         loadComponent: () => import('./features/dev/ui-playground/ui-playground.component').then(m => m.UiPlaygroundComponent)
+      },
+
+      {
+        path: 'plataforma/laboratorios',
+        canActivate: [superAdminGuard],
+        loadChildren: () =>
+          import('./features/plataforma/laboratorio/laboratorio.routes')
+            .then(m => m.LABORATORIO_ROUTES)
+      },
+
+      {
+        path: 'plataforma/usuarios',
+        canActivate: [superAdminGuard],
+        loadChildren: () =>
+          import('./features/plataforma/usuario/usuario.routes')
+            .then(m => m.PLATFORM_USUARIO_ROUTES)
       },
 
       {
@@ -59,14 +73,6 @@ export const routes: Routes = [
       },
 
       {
-        path: 'governanca/empresas',
-        canActivate: [roleGuard('ADMIN')],
-        loadChildren: () =>
-          import('./features/governanca/empresa/empresa.routes')
-            .then(m => m.EMPRESA_ROUTES)
-      },
-
-      {
         path: 'governanca/auditoria',
         canActivate: [roleGuard('ADMIN')],
         component: PlaceholderComponent,
@@ -82,7 +88,6 @@ export const routes: Routes = [
         redirectTo: 'clientes',
         pathMatch: 'full'
       }
-
     ]
   },
 
@@ -90,6 +95,4 @@ export const routes: Routes = [
     path: '**',
     redirectTo: 'clientes'
   }
-
 ];
-

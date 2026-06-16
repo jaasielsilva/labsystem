@@ -110,7 +110,7 @@ class ExameServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Exame> page = new PageImpl<>(Collections.singletonList(exame));
 
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findAllByEmpresaId(EMPRESA_ID, pageable)).thenReturn(page);
         when(mapper.toResponse(any(Exame.class))).thenReturn(response);
 
@@ -125,7 +125,7 @@ class ExameServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Exame> page = new PageImpl<>(Collections.singletonList(exame));
 
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.searchByTermAndEmpresaId(EMPRESA_ID, "Hemo", pageable)).thenReturn(page);
         when(mapper.toResponse(any(Exame.class))).thenReturn(response);
 
@@ -137,7 +137,7 @@ class ExameServiceImplTest {
 
     @Test
     void findById_WhenExists_ShouldReturnExame() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(exame));
         when(mapper.toResponse(exame)).thenReturn(response);
 
@@ -148,7 +148,7 @@ class ExameServiceImplTest {
 
     @Test
     void findById_WhenNotExists_ShouldThrowResourceNotFoundException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(1L));
@@ -156,7 +156,7 @@ class ExameServiceImplTest {
 
     @Test
     void create_WhenCodigoIsUnique_ShouldCreateExame() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.existsByCodigoAndEmpresaId(request.codigo(), EMPRESA_ID)).thenReturn(false);
         when(empresaRepository.getReferenceById(EMPRESA_ID)).thenReturn(empresa);
         when(mapper.toEntity(request)).thenReturn(exame);
@@ -171,7 +171,7 @@ class ExameServiceImplTest {
 
     @Test
     void create_WhenCodigoExists_ShouldThrowBusinessException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.existsByCodigoAndEmpresaId(request.codigo(), EMPRESA_ID)).thenReturn(true);
 
         BusinessException ex = assertThrows(BusinessException.class, () -> service.create(request));
@@ -181,7 +181,7 @@ class ExameServiceImplTest {
 
     @Test
     void delete_WhenExists_ShouldDeleteExame() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(exame));
 
         assertDoesNotThrow(() -> service.delete(1L));

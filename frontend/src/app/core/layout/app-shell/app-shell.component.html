@@ -40,7 +40,7 @@
     <div class="sidebar-tenant">
       <span class="tenant-icon" aria-hidden="true">🏢</span>
       <div class="tenant-meta">
-        <p class="tenant-label">Empresa</p>
+        <p class="tenant-label">{{ auth.isSuperAdmin() ? 'Plataforma' : 'Empresa' }}</p>
         <p class="tenant-name">{{ tenant.empresaNome() }}</p>
       </div>
     </div>

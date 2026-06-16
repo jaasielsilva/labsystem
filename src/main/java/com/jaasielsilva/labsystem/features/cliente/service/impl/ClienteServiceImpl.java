@@ -31,7 +31,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional(readOnly = true)
     public Page<ClienteResponse> findAll(Pageable pageable, String search) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
 
         if (search == null || search.isBlank()) {
             log.info("Buscando clientes paginados para empresaId={}", empresaId);
@@ -47,7 +47,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional(readOnly = true)
     public ClienteResponse findById(Long id) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Buscando cliente por id={} empresaId={}", id, empresaId);
         Cliente cliente = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
@@ -57,7 +57,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public ClienteResponse create(ClienteRequest request) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Criando novo cliente para empresaId={}", empresaId);
 
         if (repository.existsByCpfAndEmpresaId(request.cpf(), empresaId)) {
@@ -77,7 +77,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public ClienteResponse update(Long id, ClienteRequest request) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Atualizando cliente id={} empresaId={}", id, empresaId);
 
         Cliente cliente = repository.findByIdAndEmpresaId(id, empresaId)
@@ -98,7 +98,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public void delete(Long id) {
-        Long empresaId = tenantContext.requireEmpresaId();
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         log.info("Deletando cliente id={} empresaId={}", id, empresaId);
         Cliente cliente = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));

@@ -115,7 +115,7 @@ export class EmpresaListComponent implements OnInit, OnDestroy {
     });
 
     this.editNavigateTimer = setTimeout(() => {
-      this.router.navigate(['/governanca/empresas/editar', id], {
+      this.router.navigate(['/plataforma/laboratorios/editar', id], {
         state: { empresa: prefetchedEmpresa }
       });
 

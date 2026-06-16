@@ -1,9 +1,9 @@
-package com.jaasielsilva.labsystem.features.empresa.controller;
+package com.jaasielsilva.labsystem.features.platform.controller;
 
 import com.jaasielsilva.labsystem.common.ApiResponse;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaRequest;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaResponse;
-import com.jaasielsilva.labsystem.features.empresa.service.EmpresaService;
+import com.jaasielsilva.labsystem.features.platform.service.PlatformEmpresaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,12 +16,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/empresas")
+@RequestMapping("/api/v1/platform/empresas")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
-public class EmpresaController {
+@PreAuthorize("hasRole('SUPER_ADMIN')")
+public class PlatformEmpresaController {
 
-    private final EmpresaService service;
+    private final PlatformEmpresaService service;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<EmpresaResponse>>> getAll(
@@ -50,7 +50,7 @@ public class EmpresaController {
     public ResponseEntity<ApiResponse<EmpresaResponse>> create(@Valid @RequestBody EmpresaRequest request) {
         EmpresaResponse response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Empresa criada com sucesso", response));
+                .body(ApiResponse.ok("Laboratório criado com sucesso", response));
     }
 
     @PutMapping("/{id}")
@@ -58,12 +58,12 @@ public class EmpresaController {
             @PathVariable Long id,
             @Valid @RequestBody EmpresaRequest request) {
         EmpresaResponse response = service.update(id, request);
-        return ResponseEntity.ok(ApiResponse.ok("Empresa atualizada com sucesso", response));
+        return ResponseEntity.ok(ApiResponse.ok("Laboratório atualizado com sucesso", response));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok(ApiResponse.ok("Empresa removida com sucesso", null));
+        return ResponseEntity.ok(ApiResponse.ok("Laboratório removido com sucesso", null));
     }
 }

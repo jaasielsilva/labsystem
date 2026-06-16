@@ -4,6 +4,7 @@ import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
 import com.jaasielsilva.labsystem.features.auth.entity.Usuario;
 import com.jaasielsilva.labsystem.features.auth.repository.UsuarioRepository;
 import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
+import com.jaasielsilva.labsystem.features.empresa.entity.TipoEmpresa;
 import com.jaasielsilva.labsystem.features.empresa.repository.EmpresaRepository;
 import com.jaasielsilva.labsystem.features.exame.entity.Exame;
 import com.jaasielsilva.labsystem.features.exame.repository.ExameRepository;
@@ -27,13 +28,32 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        Empresa empresa = resolveDemoEmpresa();
-        seedUsuarios(empresa);
-        seedExames(empresa);
+        Empresa plataforma = resolvePlatformEmpresa();
+        Empresa laboratorio = resolveDemoLaboratorio();
+        seedSuperAdmin(plataforma);
+        seedUsuarios(laboratorio);
+        seedExames(laboratorio);
+    }
+
+    private void seedSuperAdmin(Empresa plataforma) {
+        if (usuarioRepository.existsByEmail("super@labsystem.local")) {
+            return;
+        }
+
+        log.info("Criando super administrador da plataforma para empresaId={}", plataforma.getId());
+
+        usuarioRepository.save(Usuario.builder()
+                .nome("Super Administrador")
+                .email("super@labsystem.local")
+                .senhaHash(passwordEncoder.encode("super123"))
+                .perfil(Perfil.SUPER_ADMIN)
+                .ativo(true)
+                .empresa(plataforma)
+                .build());
     }
 
     private void seedUsuarios(Empresa empresa) {
-        if (usuarioRepository.count() > 0) {
+        if (usuarioRepository.existsByEmail("admin@labsystem.local")) {
             return;
         }
 
@@ -111,15 +131,31 @@ public class DataSeeder implements CommandLineRunner {
                 .build());
     }
 
-    private Empresa resolveDemoEmpresa() {
+    private Empresa resolvePlatformEmpresa() {
+        return empresaRepository.findByTipo(TipoEmpresa.PLATAFORMA)
+                .orElseGet(() -> {
+                    log.info("Criando empresa plataforma de desenvolvimento");
+                    return empresaRepository.save(Empresa.builder()
+                            .nome("Labsystem Plataforma")
+                            .cnpj("00000000000001")
+                            .email("plataforma@labsystem.local")
+                            .tipo(TipoEmpresa.PLATAFORMA)
+                            .ativo(true)
+                            .build());
+                });
+    }
+
+    private Empresa resolveDemoLaboratorio() {
         return empresaRepository.findAll().stream()
+                .filter(empresa -> empresa.getTipo() == TipoEmpresa.LABORATORIO)
                 .findFirst()
                 .orElseGet(() -> {
-                    log.info("Criando empresa padrão de desenvolvimento");
+                    log.info("Criando laboratório padrão de desenvolvimento");
                     return empresaRepository.save(Empresa.builder()
                             .nome("Laboratório Demo")
                             .cnpj("00000000000000")
                             .email("contato@labsystem.local")
+                            .tipo(TipoEmpresa.LABORATORIO)
                             .ativo(true)
                             .build());
                 });

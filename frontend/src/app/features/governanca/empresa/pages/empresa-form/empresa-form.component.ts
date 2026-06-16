@@ -124,7 +124,7 @@ export class EmpresaFormComponent implements OnInit {
               : 'Empresa cadastrada com sucesso.'
           );
 
-          this.router.navigate(['/governanca/empresas']);
+          this.router.navigate(['/plataforma/laboratorios']);
         } else {
           this.toast.error(response.message || 'Erro ao salvar empresa.');
           this.saving = false;

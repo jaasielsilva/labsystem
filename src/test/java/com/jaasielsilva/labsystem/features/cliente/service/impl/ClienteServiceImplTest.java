@@ -105,7 +105,7 @@ class ClienteServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Cliente> page = new PageImpl<>(Collections.singletonList(cliente));
 
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findAllByEmpresaId(EMPRESA_ID, pageable)).thenReturn(page);
         when(mapper.toResponse(any(Cliente.class))).thenReturn(clienteResponse);
 
@@ -123,7 +123,7 @@ class ClienteServiceImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Cliente> page = new PageImpl<>(Collections.singletonList(cliente));
 
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.searchByTermAndEmpresaId(EMPRESA_ID, "Jaasiel", "", pageable)).thenReturn(page);
         when(mapper.toResponse(any(Cliente.class))).thenReturn(clienteResponse);
 
@@ -136,7 +136,7 @@ class ClienteServiceImplTest {
 
     @Test
     void findById_WhenExists_ShouldReturnCliente() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(cliente));
         when(mapper.toResponse(cliente)).thenReturn(clienteResponse);
 
@@ -150,7 +150,7 @@ class ClienteServiceImplTest {
 
     @Test
     void findById_WhenNotExists_ShouldThrowResourceNotFoundException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(1L));
@@ -160,7 +160,7 @@ class ClienteServiceImplTest {
 
     @Test
     void create_WhenCpfAndEmailAreUnique_ShouldCreateCliente() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.existsByCpfAndEmpresaId(clienteRequest.cpf(), EMPRESA_ID)).thenReturn(false);
         when(repository.existsByEmailAndEmpresaId(clienteRequest.email(), EMPRESA_ID)).thenReturn(false);
         when(empresaRepository.getReferenceById(EMPRESA_ID)).thenReturn(empresa);
@@ -177,7 +177,7 @@ class ClienteServiceImplTest {
 
     @Test
     void create_WhenCpfExists_ShouldThrowBusinessException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.existsByCpfAndEmpresaId(clienteRequest.cpf(), EMPRESA_ID)).thenReturn(true);
 
         BusinessException exception = assertThrows(BusinessException.class, () -> service.create(clienteRequest));
@@ -187,7 +187,7 @@ class ClienteServiceImplTest {
 
     @Test
     void create_WhenEmailExists_ShouldThrowBusinessException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.existsByCpfAndEmpresaId(clienteRequest.cpf(), EMPRESA_ID)).thenReturn(false);
         when(repository.existsByEmailAndEmpresaId(clienteRequest.email(), EMPRESA_ID)).thenReturn(true);
 
@@ -198,7 +198,7 @@ class ClienteServiceImplTest {
 
     @Test
     void update_WhenExistsAndDataIsUnique_ShouldUpdateCliente() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(cliente));
         when(repository.existsByCpfAndEmpresaIdAndIdNot(clienteRequest.cpf(), EMPRESA_ID, 1L)).thenReturn(false);
         when(repository.existsByEmailAndEmpresaIdAndIdNot(clienteRequest.email(), EMPRESA_ID, 1L)).thenReturn(false);
@@ -214,7 +214,7 @@ class ClienteServiceImplTest {
 
     @Test
     void update_WhenCpfExistsForAnotherCliente_ShouldThrowBusinessException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(cliente));
         when(repository.existsByCpfAndEmpresaIdAndIdNot(clienteRequest.cpf(), EMPRESA_ID, 1L)).thenReturn(true);
 
@@ -225,7 +225,7 @@ class ClienteServiceImplTest {
 
     @Test
     void update_WhenEmailExistsForAnotherCliente_ShouldThrowBusinessException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(cliente));
         when(repository.existsByCpfAndEmpresaIdAndIdNot(clienteRequest.cpf(), EMPRESA_ID, 1L)).thenReturn(false);
         when(repository.existsByEmailAndEmpresaIdAndIdNot(clienteRequest.email(), EMPRESA_ID, 1L)).thenReturn(true);
@@ -237,7 +237,7 @@ class ClienteServiceImplTest {
 
     @Test
     void delete_WhenExists_ShouldDelete() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.of(cliente));
         doNothing().when(repository).delete(cliente);
 
@@ -247,7 +247,7 @@ class ClienteServiceImplTest {
 
     @Test
     void delete_WhenNotExists_ShouldThrowResourceNotFoundException() {
-        when(tenantContext.requireEmpresaId()).thenReturn(EMPRESA_ID);
+        when(tenantContext.requireTenantEmpresaId()).thenReturn(EMPRESA_ID);
         when(repository.findByIdAndEmpresaId(1L, EMPRESA_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.delete(1L));

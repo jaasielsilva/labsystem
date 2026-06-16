@@ -23,7 +23,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
-      this.router.navigate(['/clientes']);
+      this.router.navigate([this.auth.getHomeRoute()]);
       return;
     }
     this.loginForm = this.fb.group({
@@ -43,7 +43,7 @@ export class LoginComponent implements OnInit {
     this.auth.login(this.loginForm.value).subscribe({
       next: (response) => {
         if (response.success) {
-          this.router.navigate(['/clientes']);
+          this.router.navigate([this.auth.getHomeRoute()]);
         } else {
           this.toast.error(response.message || 'Não foi possível entrar.');
           this.loading = false;

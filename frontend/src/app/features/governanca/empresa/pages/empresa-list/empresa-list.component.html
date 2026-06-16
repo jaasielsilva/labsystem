@@ -1,12 +1,12 @@
 <div class="page-content animate-fade-in">
   <header class="page-header">
     <div class="title-group">
-      <h1 class="page-title-sm">Empresas</h1>
-      <p class="page-subtitle">Laboratórios e unidades do sistema</p>
+      <h1 class="page-title-sm">Laboratórios</h1>
+      <p class="page-subtitle">Cadastro de laboratórios da plataforma</p>
     </div>
-    <button class="btn btn-primary btn-sm" routerLink="/governanca/empresas/novo" *ngIf="auth.canEdit()">
+    <button class="btn btn-primary btn-sm" routerLink="/plataforma/laboratorios/novo" *ngIf="auth.canEdit()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      Nova empresa
+      Novo laboratório
     </button>
   </header>
 
@@ -134,7 +134,7 @@
                 <button type="button" class="empty-cta btn-link" (click)="clearSearch()">Limpar busca</button>
               } @else {
                 <p>Nenhuma empresa cadastrada.</p>
-                <a *ngIf="auth.canEdit()" routerLink="/governanca/empresas/novo" class="empty-cta">Cadastrar primeira empresa</a>
+                <a *ngIf="auth.canEdit()" routerLink="/plataforma/laboratorios/novo" class="empty-cta">Cadastrar primeira empresa</a>
               }
             </div>
           </td>
