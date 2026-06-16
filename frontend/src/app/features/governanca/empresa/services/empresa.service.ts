@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
-import { Empresa } from '../models/empresa.model';
+import { Empresa, LaboratorioOnboarding, LaboratorioOnboardingResult } from '../models/empresa.model';
 import { ApiResponse } from '../../../../shared/models/api-response.model';
 
 @Injectable({
@@ -40,6 +40,10 @@ export class EmpresaService {
 
   create(empresa: Empresa): Observable<ApiResponse<Empresa>> {
     return this.http.post<ApiResponse<Empresa>>(this.apiUrl, empresa);
+  }
+
+  createOnboarding(payload: LaboratorioOnboarding): Observable<ApiResponse<LaboratorioOnboardingResult>> {
+    return this.http.post<ApiResponse<LaboratorioOnboardingResult>>(`${this.apiUrl}/onboarding`, payload);
   }
 
   update(id: number, empresa: Empresa): Observable<ApiResponse<Empresa>> {

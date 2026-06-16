@@ -12,11 +12,13 @@
     </a>
 
     <h1 class="page-title-sm">
-      {{ isEditMode ? 'Editar empresa' : 'Nova empresa' }}
+      {{ isEditMode ? 'Editar laboratório' : 'Novo laboratório' }}
     </h1>
 
     <p class="page-subtitle">
-      {{ isEditMode ? 'Atualize os dados da empresa.' : 'Preencha os dados para cadastrar a empresa.' }}
+      {{ isEditMode
+        ? 'Atualize os dados do laboratório.'
+        : 'Cadastre o laboratório e o primeiro administrador em um único passo.' }}
     </p>
 
   </header>
@@ -166,6 +168,65 @@
 
       </div>
 
+      <section class="form-section" *ngIf="!isEditMode" formGroupName="admin">
+        <div class="form-section-header">
+          <h2 class="form-section-title">Primeiro administrador</h2>
+          <p class="form-section-hint">
+            Conta com perfil ADMIN para o gestor acessar o laboratório.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="adminNome" class="form-label">Nome do administrador *</label>
+          <input
+            type="text"
+            id="adminNome"
+            formControlName="nome"
+            class="form-control"
+            [class.is-invalid]="adminControls['nome'].touched && adminControls['nome'].invalid"
+            placeholder="Ex: Maria da Silva"
+          />
+          <div class="invalid-feedback" *ngIf="adminControls['nome'].touched && adminControls['nome'].errors">
+            <span *ngIf="adminControls['nome'].errors['required']">O nome é obrigatório.</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="adminEmail" class="form-label">E-mail de acesso *</label>
+            <input
+              type="email"
+              id="adminEmail"
+              formControlName="email"
+              class="form-control"
+              [class.is-invalid]="adminControls['email'].touched && adminControls['email'].invalid"
+              placeholder="gestor@laboratorio.com"
+            />
+            <div class="invalid-feedback" *ngIf="adminControls['email'].touched && adminControls['email'].errors">
+              <span *ngIf="adminControls['email'].errors['required']">O e-mail é obrigatório.</span>
+              <span *ngIf="adminControls['email'].errors['email']">E-mail inválido.</span>
+            </div>
+          </div>
+
+          <div class="form-group col-half">
+            <label for="adminSenha" class="form-label">Senha inicial *</label>
+            <input
+              type="password"
+              id="adminSenha"
+              formControlName="senha"
+              class="form-control"
+              autocomplete="new-password"
+              [class.is-invalid]="adminControls['senha'].touched && adminControls['senha'].invalid"
+              placeholder="Mínimo 6 caracteres"
+            />
+            <div class="invalid-feedback" *ngIf="adminControls['senha'].touched && adminControls['senha'].errors">
+              <span *ngIf="adminControls['senha'].errors['required']">A senha é obrigatória.</span>
+              <span *ngIf="adminControls['senha'].errors['minlength']">Mínimo de 6 caracteres.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Actions -->
       <footer class="form-actions">
 
@@ -182,7 +243,7 @@
 
           <span class="spinner-sm" *ngIf="saving"></span>
 
-          {{ saving ? 'Salvando...' : 'Salvar' }}
+          {{ saving ? 'Salvando...' : (isEditMode ? 'Salvar' : 'Cadastrar laboratório') }}
         </button>
 
       </footer>

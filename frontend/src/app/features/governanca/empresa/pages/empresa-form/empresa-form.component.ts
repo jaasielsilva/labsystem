@@ -47,10 +47,19 @@ export class EmpresaFormComponent implements OnInit {
     });
   }
 
+  private addAdminFormGroup(): void {
+    this.empresaForm.addControl('admin', this.fb.group({
+      nome: ['', [Validators.required, Validators.maxLength(150)]],
+      email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
+      senha: ['', [Validators.required, Validators.minLength(6)]]
+    }));
+  }
+
   private checkEditMode(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
 
     if (!idParam) {
+      this.addAdminFormGroup();
       return;
     }
 
@@ -109,35 +118,55 @@ export class EmpresaFormComponent implements OnInit {
 
     this.saving = true;
 
-    const empresaData: Empresa = this.empresaForm.value;
+    if (this.isEditMode && this.empresaId) {
+      const empresaData: Empresa = this.empresaForm.value;
+      this.empresaService.update(this.empresaId, empresaData).subscribe({
+        next: (response) => this.handleSaveResponse(
+          response,
+          'Laboratório atualizado com sucesso.'
+        ),
+        error: (err) => this.handleSaveError(err)
+      });
+      return;
+    }
 
-    const request$ = this.isEditMode && this.empresaId
-      ? this.empresaService.update(this.empresaId, empresaData)
-      : this.empresaService.create(empresaData);
+    const { admin, ...laboratorio } = this.empresaForm.value;
 
-    request$.subscribe({
+    this.empresaService.createOnboarding({ laboratorio, admin }).subscribe({
       next: (response) => {
         if (response.success) {
-          this.toast.success(
-            this.isEditMode
-              ? 'Empresa atualizada com sucesso.'
-              : 'Empresa cadastrada com sucesso.'
-          );
-
+          const adminEmail = response.data?.admin?.email ?? admin.email;
+          this.toast.success(`Laboratório e administrador criados. Acesso: ${adminEmail}`);
           this.router.navigate(['/plataforma/laboratorios']);
         } else {
-          this.toast.error(response.message || 'Erro ao salvar empresa.');
+          this.toast.error(response.message || 'Erro ao cadastrar laboratório.');
           this.saving = false;
         }
       },
-      error: (err) => {
-        this.toast.error(err.error?.message || 'Ocorreu um erro inesperado no servidor.');
-        this.saving = false;
-      }
+      error: (err) => this.handleSaveError(err)
     });
+  }
+
+  private handleSaveResponse(response: { success: boolean; message?: string }, successMessage: string): void {
+    if (response.success) {
+      this.toast.success(successMessage);
+      this.router.navigate(['/plataforma/laboratorios']);
+    } else {
+      this.toast.error(response.message || 'Erro ao salvar laboratório.');
+      this.saving = false;
+    }
+  }
+
+  private handleSaveError(err: { error?: { message?: string } }): void {
+    this.toast.error(err.error?.message || 'Ocorreu um erro inesperado no servidor.');
+    this.saving = false;
   }
 
   get f() {
     return this.empresaForm.controls;
+  }
+
+  get adminControls() {
+    return (this.empresaForm.get('admin') as FormGroup).controls;
   }
 }

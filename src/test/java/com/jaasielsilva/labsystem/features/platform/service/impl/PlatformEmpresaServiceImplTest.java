@@ -2,6 +2,8 @@ package com.jaasielsilva.labsystem.features.platform.service.impl;
 
 import com.jaasielsilva.labsystem.exception.BusinessException;
 import com.jaasielsilva.labsystem.exception.ResourceNotFoundException;
+import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
+import com.jaasielsilva.labsystem.features.auth.entity.Usuario;
 import com.jaasielsilva.labsystem.features.auth.repository.UsuarioRepository;
 import com.jaasielsilva.labsystem.features.cliente.repository.ClienteRepository;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaRequest;
@@ -11,6 +13,10 @@ import com.jaasielsilva.labsystem.features.empresa.entity.TipoEmpresa;
 import com.jaasielsilva.labsystem.features.empresa.mapper.EmpresaMapper;
 import com.jaasielsilva.labsystem.features.empresa.repository.EmpresaRepository;
 import com.jaasielsilva.labsystem.features.exame.repository.ExameRepository;
+import com.jaasielsilva.labsystem.features.platform.dto.LaboratorioOnboardingRequest;
+import com.jaasielsilva.labsystem.features.platform.dto.PrimeiroAdminRequest;
+import com.jaasielsilva.labsystem.features.usuario.dto.UsuarioResponse;
+import com.jaasielsilva.labsystem.features.usuario.mapper.UsuarioMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -48,6 +55,12 @@ class PlatformEmpresaServiceImplTest {
 
     @Mock
     private ExameRepository exameRepository;
+
+    @Mock
+    private UsuarioMapper usuarioMapper;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private PlatformEmpresaServiceImpl service;
@@ -121,6 +134,64 @@ class PlatformEmpresaServiceImplTest {
         assertNotNull(result);
         assertEquals(TipoEmpresa.LABORATORIO, empresa.getTipo());
         verify(repository).save(empresa);
+    }
+
+    @Test
+    void onboard_WhenDataIsValid_ShouldCreateLaboratorioAndAdmin() {
+        PrimeiroAdminRequest adminRequest = new PrimeiroAdminRequest(
+                "Gestor Lab",
+                "gestor@lab.com",
+                "senha123"
+        );
+        LaboratorioOnboardingRequest onboardingRequest = new LaboratorioOnboardingRequest(request, adminRequest);
+
+        Usuario admin = Usuario.builder()
+                .id(5L)
+                .nome(adminRequest.nome())
+                .email(adminRequest.email())
+                .perfil(Perfil.ADMIN)
+                .ativo(true)
+                .empresa(empresa)
+                .build();
+
+        UsuarioResponse adminResponse = new UsuarioResponse();
+        adminResponse.setId(5L);
+        adminResponse.setNome(adminRequest.nome());
+        adminResponse.setEmail(adminRequest.email());
+        adminResponse.setPerfil(Perfil.ADMIN.name());
+        adminResponse.setEmpresaId(empresa.getId());
+
+        when(usuarioRepository.existsByEmail(adminRequest.email())).thenReturn(false);
+        when(repository.existsByCnpj(request.cnpj())).thenReturn(false);
+        when(mapper.toEntity(request)).thenReturn(empresa);
+        when(repository.save(empresa)).thenReturn(empresa);
+        when(passwordEncoder.encode(adminRequest.senha())).thenReturn("hash");
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(admin);
+        when(mapper.toResponse(empresa)).thenReturn(response);
+        when(usuarioMapper.toResponse(admin)).thenReturn(adminResponse);
+
+        var result = service.onboard(onboardingRequest);
+
+        assertNotNull(result);
+        assertEquals(response, result.laboratorio());
+        assertEquals(adminResponse, result.admin());
+        verify(usuarioRepository).save(any(Usuario.class));
+    }
+
+    @Test
+    void onboard_WhenAdminEmailExists_ShouldThrowBusinessException() {
+        PrimeiroAdminRequest adminRequest = new PrimeiroAdminRequest(
+                "Gestor Lab",
+                "gestor@lab.com",
+                "senha123"
+        );
+        LaboratorioOnboardingRequest onboardingRequest = new LaboratorioOnboardingRequest(request, adminRequest);
+
+        when(usuarioRepository.existsByEmail(adminRequest.email())).thenReturn(true);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> service.onboard(onboardingRequest));
+        assertEquals("E-mail do administrador já cadastrado.", ex.getMessage());
+        verify(repository, never()).save(any());
     }
 
     @Test

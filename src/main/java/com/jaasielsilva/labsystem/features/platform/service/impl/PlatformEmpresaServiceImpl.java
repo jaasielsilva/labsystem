@@ -2,6 +2,8 @@ package com.jaasielsilva.labsystem.features.platform.service.impl;
 
 import com.jaasielsilva.labsystem.exception.BusinessException;
 import com.jaasielsilva.labsystem.exception.ResourceNotFoundException;
+import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
+import com.jaasielsilva.labsystem.features.auth.entity.Usuario;
 import com.jaasielsilva.labsystem.features.auth.repository.UsuarioRepository;
 import com.jaasielsilva.labsystem.features.cliente.repository.ClienteRepository;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaRequest;
@@ -11,11 +13,16 @@ import com.jaasielsilva.labsystem.features.empresa.entity.TipoEmpresa;
 import com.jaasielsilva.labsystem.features.empresa.mapper.EmpresaMapper;
 import com.jaasielsilva.labsystem.features.empresa.repository.EmpresaRepository;
 import com.jaasielsilva.labsystem.features.exame.repository.ExameRepository;
+import com.jaasielsilva.labsystem.features.platform.dto.LaboratorioOnboardingRequest;
+import com.jaasielsilva.labsystem.features.platform.dto.LaboratorioOnboardingResponse;
+import com.jaasielsilva.labsystem.features.platform.dto.PrimeiroAdminRequest;
 import com.jaasielsilva.labsystem.features.platform.service.PlatformEmpresaService;
+import com.jaasielsilva.labsystem.features.usuario.mapper.UsuarioMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +36,8 @@ public class PlatformEmpresaServiceImpl implements PlatformEmpresaService {
     private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final ExameRepository exameRepository;
+    private final UsuarioMapper usuarioMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -57,15 +66,46 @@ public class PlatformEmpresaServiceImpl implements PlatformEmpresaService {
     @Transactional
     public EmpresaResponse create(EmpresaRequest request) {
         log.info("Criando novo laboratório");
+        return mapper.toResponse(saveNewLaboratorio(request));
+    }
 
+    @Override
+    @Transactional
+    public LaboratorioOnboardingResponse onboard(LaboratorioOnboardingRequest request) {
+        log.info("Onboarding de novo laboratório com administrador");
+
+        PrimeiroAdminRequest admin = request.admin();
+        if (usuarioRepository.existsByEmail(admin.email())) {
+            throw new BusinessException("E-mail do administrador já cadastrado.");
+        }
+
+        Empresa laboratorio = saveNewLaboratorio(request.laboratorio());
+
+        Usuario adminUsuario = Usuario.builder()
+                .nome(admin.nome())
+                .email(admin.email())
+                .perfil(Perfil.ADMIN)
+                .ativo(true)
+                .empresa(laboratorio)
+                .senhaHash(passwordEncoder.encode(admin.senha()))
+                .build();
+
+        Usuario savedAdmin = usuarioRepository.save(adminUsuario);
+
+        return new LaboratorioOnboardingResponse(
+                mapper.toResponse(laboratorio),
+                usuarioMapper.toResponse(savedAdmin)
+        );
+    }
+
+    private Empresa saveNewLaboratorio(EmpresaRequest request) {
         if (repository.existsByCnpj(request.cnpj())) {
             throw new BusinessException("CNPJ já cadastrado no sistema.");
         }
 
         Empresa empresa = mapper.toEntity(request);
         empresa.setTipo(TipoEmpresa.LABORATORIO);
-        Empresa saved = repository.save(empresa);
-        return mapper.toResponse(saved);
+        return repository.save(empresa);
     }
 
     @Override

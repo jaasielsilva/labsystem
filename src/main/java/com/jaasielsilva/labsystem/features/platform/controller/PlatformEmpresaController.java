@@ -3,6 +3,8 @@ package com.jaasielsilva.labsystem.features.platform.controller;
 import com.jaasielsilva.labsystem.common.ApiResponse;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaRequest;
 import com.jaasielsilva.labsystem.features.empresa.dto.EmpresaResponse;
+import com.jaasielsilva.labsystem.features.platform.dto.LaboratorioOnboardingRequest;
+import com.jaasielsilva.labsystem.features.platform.dto.LaboratorioOnboardingResponse;
 import com.jaasielsilva.labsystem.features.platform.service.PlatformEmpresaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +53,14 @@ public class PlatformEmpresaController {
         EmpresaResponse response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok("Laboratório criado com sucesso", response));
+    }
+
+    @PostMapping("/onboarding")
+    public ResponseEntity<ApiResponse<LaboratorioOnboardingResponse>> onboard(
+            @Valid @RequestBody LaboratorioOnboardingRequest request) {
+        LaboratorioOnboardingResponse response = service.onboard(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Laboratório e administrador criados com sucesso", response));
     }
 
     @PutMapping("/{id}")
