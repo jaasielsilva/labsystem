@@ -42,9 +42,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Exames',
         route: '/exames',
         icon: '🧪',
-        roles: ['ADMIN', 'OPERADOR', 'VISUALIZADOR'],
-        disabled: true,
-        disabledLabel: 'Em breve'
+        roles: ['ADMIN', 'OPERADOR', 'VISUALIZADOR']
       },
       {
         id: 'resultados',

@@ -29,6 +29,11 @@ export const routes: Routes = [
       },
 
       {
+        path: 'exames',
+        loadChildren: () => import('./features/exame/exame.routes').then(m => m.EXAME_ROUTES)
+      },
+
+      {
         path: 'dev/ui',
         canActivate: [roleGuard('ADMIN')],
         loadComponent: () => import('./features/dev/ui-playground/ui-playground.component').then(m => m.UiPlaygroundComponent)

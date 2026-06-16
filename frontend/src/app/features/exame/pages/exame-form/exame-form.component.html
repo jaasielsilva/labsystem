@@ -1,1 +1,176 @@
-<p>exame-form works!</p>
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+    <a routerLink="/exames" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Voltar
+    </a>
+    <h1 class="page-title-sm">{{ isEditMode ? 'Editar exame' : 'Novo exame' }}</h1>
+    <p class="page-subtitle">{{ isEditMode ? 'Atualize os dados do exame.' : 'Preencha os dados para cadastrar o exame.' }}</p>
+  </header>
+
+  <div class="glass-card form-card">
+    <div class="loader-overlay" *ngIf="loading">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando dados do exame...</p>
+      </div>
+    </div>
+
+    <form [formGroup]="exameForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      
+      <div class="form-row">
+        <!-- Código -->
+        <div class="form-group col-half">
+          <label for="codigo" class="form-label">Código *</label>
+          <input 
+            type="text" 
+            id="codigo" 
+            formControlName="codigo" 
+            class="form-control" 
+            [class.is-invalid]="f['codigo'].touched && f['codigo'].invalid"
+            placeholder="Ex: HEMO001"
+          />
+          <div class="invalid-feedback" *ngIf="f['codigo'].touched && f['codigo'].errors">
+            <span *ngIf="f['codigo'].errors['required']">O código é obrigatório.</span>
+            <span *ngIf="f['codigo'].errors['maxlength']">O código não deve exceder 50 caracteres.</span>
+          </div>
+        </div>
+
+        <!-- Tipo de Amostra -->
+        <div class="form-group col-half">
+          <label for="tipoAmostra" class="form-label">Tipo de Amostra *</label>
+          <select 
+            id="tipoAmostra" 
+            formControlName="tipoAmostra" 
+            class="form-control" 
+            [class.is-invalid]="f['tipoAmostra'].touched && f['tipoAmostra'].invalid"
+          >
+            <option value="SANGUE">Sangue</option>
+            <option value="URINA">Urina</option>
+            <option value="FEZES">Fezes</option>
+            <option value="OUTRO">Outro</option>
+          </select>
+          <div class="invalid-feedback" *ngIf="f['tipoAmostra'].touched && f['tipoAmostra'].errors">
+            <span *ngIf="f['tipoAmostra'].errors['required']">O tipo de amostra é obrigatório.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nome -->
+      <div class="form-group">
+        <label for="nome" class="form-label">Nome do Exame *</label>
+        <input 
+          type="text" 
+          id="nome" 
+          formControlName="nome" 
+          class="form-control" 
+          [class.is-invalid]="f['nome'].touched && f['nome'].invalid"
+          placeholder="Ex: Hemograma Completo"
+        />
+        <div class="invalid-feedback" *ngIf="f['nome'].touched && f['nome'].errors">
+          <span *ngIf="f['nome'].errors['required']">O nome do exame é obrigatório.</span>
+          <span *ngIf="f['nome'].errors['maxlength']">O nome não deve exceder 200 caracteres.</span>
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div class="form-group">
+        <label for="descricao" class="form-label">Descrição</label>
+        <textarea 
+          id="descricao" 
+          formControlName="descricao" 
+          class="form-control" 
+          [class.is-invalid]="f['descricao'].touched && f['descricao'].invalid"
+          rows="3"
+          placeholder="Descrição detalhada do exame..."
+        ></textarea>
+        <div class="invalid-feedback" *ngIf="f['descricao'].touched && f['descricao'].errors">
+          <span *ngIf="f['descricao'].errors['maxlength']">A descrição não deve exceder 500 caracteres.</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Categoria -->
+        <div class="form-group col-half">
+          <label for="categoria" class="form-label">Categoria</label>
+          <input 
+            type="text" 
+            id="categoria" 
+            formControlName="categoria" 
+            class="form-control" 
+            [class.is-invalid]="f['categoria'].touched && f['categoria'].invalid"
+            placeholder="Ex: Hematologia"
+          />
+          <div class="invalid-feedback" *ngIf="f['categoria'].touched && f['categoria'].errors">
+            <span *ngIf="f['categoria'].errors['maxlength']">A categoria não deve exceder 100 caracteres.</span>
+          </div>
+        </div>
+
+        <!-- Prazo -->
+        <div class="form-group col-half">
+          <label for="prazoDias" class="form-label">Prazo (dias) *</label>
+          <input 
+            type="number" 
+            id="prazoDias" 
+            formControlName="prazoDias" 
+            class="form-control" 
+            [class.is-invalid]="f['prazoDias'].touched && f['prazoDias'].invalid"
+            min="1" 
+            max="365"
+          />
+          <div class="invalid-feedback" *ngIf="f['prazoDias'].touched && f['prazoDias'].errors">
+            <span *ngIf="f['prazoDias'].errors['required']">O prazo é obrigatório.</span>
+            <span *ngIf="f['prazoDias'].errors['min']">O prazo deve ser de no mínimo 1 dia.</span>
+            <span *ngIf="f['prazoDias'].errors['max']">O prazo não pode exceder 365 dias.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <!-- Valor -->
+        <div class="form-group col-half">
+          <label for="valor" class="form-label">Valor (R$)</label>
+          <input 
+            type="number" 
+            id="valor" 
+            formControlName="valor" 
+            class="form-control" 
+            [class.is-invalid]="f['valor'].touched && f['valor'].invalid"
+            min="0" 
+            step="0.01"
+            placeholder="0.00"
+          />
+          <div class="invalid-feedback" *ngIf="f['valor'].touched && f['valor'].errors">
+            <span *ngIf="f['valor'].errors['min']">O valor não pode ser negativo.</span>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group col-half">
+          <label class="form-label">Status</label>
+          <div class="form-check">
+            <input 
+              type="checkbox" 
+              id="ativo" 
+              formControlName="ativo" 
+              class="form-check-input"
+            />
+            <label for="ativo" class="form-check-label">Ativo</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <footer class="form-actions">
+        <button type="button" class="btn btn-secondary" routerLink="/exames" [disabled]="saving">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary btn-sm" [disabled]="exameForm.invalid || saving">
+          <span class="spinner-sm" *ngIf="saving"></span>
+          {{ saving ? 'Salvando...' : 'Salvar' }}
+        </button>
+      </footer>
+
+    </form>
+  </div>
+</div>

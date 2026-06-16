@@ -5,8 +5,7 @@ import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil, timeo
 
 import { ExameService } from '../../services/exame.service';
 import { Exame } from '../../models/exame.model';
-
-
+import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
@@ -22,6 +21,7 @@ export class ExameListComponent implements OnInit, OnDestroy {
   private exameService = inject(ExameService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  protected auth = inject(AuthService);
 
   private readonly destroy$ = new Subject<void>();
   private readonly searchChanges$ = new Subject<string>();
@@ -39,6 +39,10 @@ export class ExameListComponent implements OnInit, OnDestroy {
   searchQuery = '';
 
   loading = signal(false);
+  editingLoading = signal(false);
+
+  private editNavigateTimer?: ReturnType<typeof setTimeout>;
+  private static readonly EDIT_LOADING_MS = 2000;
 
   confirmDeleteId: number | null = null;
 
@@ -56,8 +60,11 @@ export class ExameListComponent implements OnInit, OnDestroy {
     return this.searchQuery.trim().length > 0;
   }
 
+  /** Linhas vazias para manter altura fixa do grid entre páginas */
   get fillerRows(): null[] {
-    if (this.loading() || this.exames.length === 0) return [];
+    if (this.loading() || this.editingLoading() || this.exames.length === 0) {
+      return [];
+    }
     const missing = this.pageSize - this.exames.length;
     return missing > 0 ? Array.from({ length: missing }, () => null) : [];
   }
@@ -79,6 +86,9 @@ export class ExameListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.editNavigateTimer) {
+      clearTimeout(this.editNavigateTimer);
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -87,6 +97,30 @@ export class ExameListComponent implements OnInit, OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     this.searchQuery = value;
     this.searchChanges$.next(value);
+  }
+
+  onEdit(id: number): void {
+    if (this.editingLoading() || this.loading()) {
+      return;
+    }
+
+    this.editingLoading.set(true);
+    let prefetchedExame: Exame | null = null;
+
+    this.exameService.getById(id).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          prefetchedExame = response.data;
+        }
+      }
+    });
+
+    this.editNavigateTimer = setTimeout(() => {
+      this.router.navigate(['/exames/editar', id], {
+        state: { exame: prefetchedExame }
+      });
+      this.editingLoading.set(false);
+    }, ExameListComponent.EDIT_LOADING_MS);
   }
 
   clearSearch(): void {
@@ -119,9 +153,9 @@ export class ExameListComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           if (err.name === 'TimeoutError') {
-            this.toast.error('O servidor demorou para responder. Verifique o backend.');
+            this.toast.error('O servidor demorou para responder. Verifique se o backend está rodando.');
           } else {
-            this.toast.error(err.error?.message || 'Erro ao conectar com o servidor.');
+            this.toast.error(err.error?.message || 'Erro ao se conectar com o servidor.');
           }
         }
       });
