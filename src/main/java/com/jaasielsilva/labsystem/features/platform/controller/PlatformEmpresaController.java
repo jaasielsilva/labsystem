@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/platform/empresas")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("@platformAccess.allow()")
 public class PlatformEmpresaController {
 
     private final PlatformEmpresaService service;

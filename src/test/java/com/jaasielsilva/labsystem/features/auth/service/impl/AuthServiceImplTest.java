@@ -111,7 +111,17 @@ class AuthServiceImplTest {
     void refresh_WhenTokenValid_ShouldReturnNewTokens() {
         RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
         when(jwtService.isRefreshToken("refresh-token")).thenReturn(true);
-        when(jwtService.extractEmail("refresh-token")).thenReturn(usuario.getEmail());
+        when(jwtService.readTokenContext("refresh-token")).thenReturn(
+                new com.jaasielsilva.labsystem.common.JwtTokenContext(
+                        usuario.getEmail(),
+                        usuario.getPerfil(),
+                        EMPRESA_ID,
+                        com.jaasielsilva.labsystem.common.AccessScope.TENANT,
+                        null,
+                        null,
+                        "refresh"
+                )
+        );
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(jwtService.isTokenValid("refresh-token", usuario.getEmail())).thenReturn(true);
         when(jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil(), EMPRESA_ID)).thenReturn("new-access");

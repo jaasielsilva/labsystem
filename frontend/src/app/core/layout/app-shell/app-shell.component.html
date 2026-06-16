@@ -40,13 +40,29 @@
     <div class="sidebar-tenant">
       <span class="tenant-icon" aria-hidden="true">🏢</span>
       <div class="tenant-meta">
-        <p class="tenant-label">{{ auth.isSuperAdmin() ? 'Plataforma' : 'Empresa' }}</p>
+        <p class="tenant-label">{{ auth.isImpersonating() ? 'Laboratório' : (auth.isSuperAdmin() ? 'Plataforma' : 'Empresa') }}</p>
         <p class="tenant-name">{{ tenant.empresaNome() }}</p>
       </div>
     </div>
   </aside>
 
   <div class="shell-main">
+    @if (auth.isImpersonating()) {
+      <div class="impersonation-banner" role="status">
+        <span>
+          Modo suporte — visualizando <strong>{{ tenant.empresaNome() }}</strong>
+        </span>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          (click)="exitImpersonation()"
+          [disabled]="exitingImpersonation()"
+        >
+          {{ exitingImpersonation() ? 'Saindo...' : 'Sair do laboratório' }}
+        </button>
+      </div>
+    }
+
     <header class="topbar">
       <button
         type="button"

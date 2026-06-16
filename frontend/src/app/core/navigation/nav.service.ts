@@ -14,10 +14,16 @@ export class NavService {
 
   private buildVisibleSections(): NavSection[] {
     this.auth.usuarioAtual();
+    const impersonating = this.auth.isImpersonating();
 
     return NAV_SECTIONS.map((section) => ({
       ...section,
-      items: section.items.filter((item) => this.canAccess(item))
+      items: section.items.filter((item) => {
+        if (impersonating && section.id === 'plataforma') {
+          return false;
+        }
+        return this.canAccess(item);
+      })
     })).filter((section) => section.items.length > 0);
   }
 }

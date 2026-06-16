@@ -6,6 +6,10 @@ export const superAdminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
+  if (auth.isImpersonating()) {
+    return router.createUrlTree(['/clientes']);
+  }
+
   if (auth.isSuperAdmin()) {
     return true;
   }

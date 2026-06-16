@@ -158,6 +158,22 @@
   flex-direction: column;
 }
 
+.impersonation-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  background: #fffbeb;
+  border-bottom: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.impersonation-banner strong {
+  font-weight: 700;
+}
+
 .topbar {
   display: flex;
   align-items: center;

@@ -85,13 +85,40 @@ export class AuthService {
     return this.hasRole('SUPER_ADMIN');
   }
 
+  isImpersonating(): boolean {
+    return this.usuarioAtual()?.scope === 'TENANT_IMPERSONATION';
+  }
+
   isTenantUser(): boolean {
     const usuario = this.usuarioAtual();
-    return !!usuario && usuario.perfil !== 'SUPER_ADMIN';
+    return !!usuario && (usuario.perfil !== 'SUPER_ADMIN' || this.isImpersonating());
   }
 
   getHomeRoute(): string {
+    if (this.isImpersonating()) {
+      return '/clientes';
+    }
     return this.isSuperAdmin() ? '/plataforma/laboratorios' : '/clientes';
+  }
+
+  startImpersonation(laboratorioId: number): Observable<ApiResponse<LoginResponse>> {
+    return this.http
+      .post<ApiResponse<LoginResponse>>(`${environment.apiUrl}/platform/impersonate/${laboratorioId}`, {})
+      .pipe(tap((response) => {
+        if (response.success && response.data) {
+          this.persistSession(response.data);
+        }
+      }));
+  }
+
+  exitImpersonation(): Observable<ApiResponse<LoginResponse>> {
+    return this.http
+      .post<ApiResponse<LoginResponse>>(`${environment.apiUrl}/platform/impersonate/exit`, {})
+      .pipe(tap((response) => {
+        if (response.success && response.data) {
+          this.persistSession(response.data);
+        }
+      }));
   }
 
   canEdit(): boolean {

@@ -1,9 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NavService } from '../../navigation/nav.service';
 import { TenantContextService } from '../../services/tenant-context.service';
+import { ToastService } from '../../services/toast.service';
 import { Perfil } from '../../models/usuario.model';
 
 const PERFIL_LABELS: Record<Perfil, string> = {
@@ -24,8 +25,11 @@ export class AppShellComponent {
   protected auth = inject(AuthService);
   protected nav = inject(NavService);
   protected tenant = inject(TenantContextService);
+  private router = inject(Router);
+  private toast = inject(ToastService);
 
   sidebarOpen = signal(false);
+  exitingImpersonation = signal(false);
 
   perfilLabel(perfil: Perfil): string {
     return PERFIL_LABELS[perfil] ?? perfil;
@@ -33,6 +37,30 @@ export class AppShellComponent {
 
   logout(): void {
     this.auth.logout();
+  }
+
+  exitImpersonation(): void {
+    if (this.exitingImpersonation()) {
+      return;
+    }
+
+    this.exitingImpersonation.set(true);
+
+    this.auth.exitImpersonation().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.toast.success('Modo suporte encerrado.');
+          this.router.navigate(['/plataforma/laboratorios']);
+        } else {
+          this.toast.error(response.message || 'Erro ao sair do modo suporte.');
+        }
+        this.exitingImpersonation.set(false);
+      },
+      error: (err) => {
+        this.toast.error(err.error?.message || 'Erro ao sair do modo suporte.');
+        this.exitingImpersonation.set(false);
+      }
+    });
   }
 
   toggleSidebar(): void {

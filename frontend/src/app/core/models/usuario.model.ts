@@ -1,5 +1,5 @@
 export type Perfil = 'SUPER_ADMIN' | 'ADMIN' | 'OPERADOR' | 'VISUALIZADOR';
-export type AccessScope = 'PLATFORM' | 'TENANT';
+export type AccessScope = 'PLATFORM' | 'TENANT' | 'TENANT_IMPERSONATION';
 
 export interface Usuario {
   id: number;
@@ -9,4 +9,6 @@ export interface Usuario {
   empresaId: number;
   empresaNome: string;
   scope?: AccessScope;
+  actingEmpresaId?: number | null;
+  actingEmpresaNome?: string | null;
 }

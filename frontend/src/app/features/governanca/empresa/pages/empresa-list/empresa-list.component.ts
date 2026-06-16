@@ -42,6 +42,7 @@ export class EmpresaListComponent implements OnInit, OnDestroy {
   editingLoading = signal(false);
 
   confirmDeleteId: number | null = null;
+  enteringLaboratorioId: number | null = null;
 
   private editNavigateTimer?: ReturnType<typeof setTimeout>;
   private static readonly EDIT_LOADING_MS = 2000;
@@ -208,6 +209,30 @@ export class EmpresaListComponent implements OnInit, OnDestroy {
 
   cancelDelete(): void {
     this.confirmDeleteId = null;
+  }
+
+  enterLaboratorio(empresa: Empresa): void {
+    if (!empresa.id || !empresa.ativo || this.enteringLaboratorioId !== null) {
+      return;
+    }
+
+    this.enteringLaboratorioId = empresa.id;
+
+    this.auth.startImpersonation(empresa.id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.toast.success(`Modo suporte: ${empresa.nome}`);
+          this.router.navigate(['/clientes']);
+        } else {
+          this.toast.error(response.message || 'Não foi possível entrar no laboratório.');
+        }
+        this.enteringLaboratorioId = null;
+      },
+      error: (err) => {
+        this.toast.error(err.error?.message || 'Erro ao entrar no laboratório.');
+        this.enteringLaboratorioId = null;
+      }
+    });
   }
 
   deleteEmpresa(id: number): void {

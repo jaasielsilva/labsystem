@@ -10,5 +10,7 @@ public record UsuarioResponse(
     Perfil perfil,
     Long empresaId,
     String empresaNome,
-    AccessScope scope
+    AccessScope scope,
+    Long actingEmpresaId,
+    String actingEmpresaNome
 ) {}

@@ -2,8 +2,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ToastService } from '../../../../core/services/toast.service';
+
+interface DevAccount {
+  label: string;
+  email: string;
+  senha: string;
+}
 
 @Component({
   selector: 'app-login',
@@ -21,6 +28,15 @@ export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   loading = false;
 
+  readonly showDevCredentials = environment.showDevCredentials;
+
+  readonly devAccounts: DevAccount[] = [
+    { label: 'Super Admin', email: 'super@labsystem.local', senha: 'super123' },
+    { label: 'Admin', email: 'admin@labsystem.local', senha: 'admin123' },
+    { label: 'Operador', email: 'operador@labsystem.local', senha: 'operador123' },
+    { label: 'Visualizador', email: 'visualizador@labsystem.local', senha: 'visualizador123' }
+  ];
+
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
       this.router.navigate([this.auth.getHomeRoute()]);
@@ -29,6 +45,13 @@ export class LoginComponent implements OnInit {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       senha: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
+
+  fillDevAccount(account: DevAccount): void {
+    this.loginForm.patchValue({
+      email: account.email,
+      senha: account.senha
     });
   }
 

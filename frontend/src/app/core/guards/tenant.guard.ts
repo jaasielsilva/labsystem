@@ -6,7 +6,7 @@ export const tenantGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.isSuperAdmin()) {
+  if (auth.isSuperAdmin() && !auth.isImpersonating()) {
     return router.createUrlTree(['/plataforma/laboratorios']);
   }
 

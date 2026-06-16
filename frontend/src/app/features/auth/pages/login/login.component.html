@@ -46,6 +46,23 @@
       </button>
     </form>
 
-    <p class="dev-hint">Dev: admin@labsystem.local / admin123</p>
+    @if (showDevCredentials) {
+      <div class="dev-credentials">
+        <p class="dev-credentials-title">Contas de desenvolvimento</p>
+        <div class="dev-credentials-list">
+          @for (account of devAccounts; track account.email) {
+            <button
+              type="button"
+              class="dev-account-btn"
+              (click)="fillDevAccount(account)"
+              [disabled]="loading"
+            >
+              <span class="dev-account-label">{{ account.label }}</span>
+              <span class="dev-account-meta">{{ account.email }} / {{ account.senha }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    }
   </div>
 </div>

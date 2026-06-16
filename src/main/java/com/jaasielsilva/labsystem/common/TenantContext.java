@@ -10,16 +10,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class TenantContext {
 
-    public AccessScope scope() {
-        Perfil perfil = currentPerfil();
-        return AccessScope.fromPerfil(perfil);
+    public AccessScope effectiveScope() {
+        if (ImpersonationContext.isActive()) {
+            return AccessScope.TENANT_IMPERSONATION;
+        }
+        return AccessScope.fromPerfil(currentPerfil());
     }
 
     public boolean isSuperAdmin() {
         return currentPerfil() == Perfil.SUPER_ADMIN;
     }
 
+    public boolean isImpersonating() {
+        return ImpersonationContext.isActive();
+    }
+
     public Long requireTenantEmpresaId() {
+        if (isImpersonating()) {
+            return ImpersonationContext.requireEmpresaId();
+        }
         if (isSuperAdmin()) {
             throw new BusinessException("Operação disponível apenas no contexto de um laboratório.");
         }
