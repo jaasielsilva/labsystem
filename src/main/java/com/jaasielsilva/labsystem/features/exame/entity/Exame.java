@@ -1,12 +1,15 @@
 package com.jaasielsilva.labsystem.features.exame.entity;
 
+import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "exames")
+@Table(name = "exames", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_exames_empresa_codigo", columnNames = {"empresa_id", "codigo"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,7 +21,7 @@ public class Exame {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String codigo;
 
     @Column(nullable = false, length = 200)
@@ -43,6 +46,10 @@ public class Exame {
     @Column(nullable = false)
     @Builder.Default
     private boolean ativo = true;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Empresa empresa;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

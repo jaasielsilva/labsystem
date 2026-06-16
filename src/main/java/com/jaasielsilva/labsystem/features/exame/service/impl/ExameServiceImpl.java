@@ -1,7 +1,10 @@
 package com.jaasielsilva.labsystem.features.exame.service.impl;
 
+import com.jaasielsilva.labsystem.common.TenantContext;
 import com.jaasielsilva.labsystem.exception.BusinessException;
 import com.jaasielsilva.labsystem.exception.ResourceNotFoundException;
+import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
+import com.jaasielsilva.labsystem.features.empresa.repository.EmpresaRepository;
 import com.jaasielsilva.labsystem.features.exame.dto.ExameRequest;
 import com.jaasielsilva.labsystem.features.exame.dto.ExameResponse;
 import com.jaasielsilva.labsystem.features.exame.entity.Exame;
@@ -22,25 +25,30 @@ public class ExameServiceImpl implements ExameService {
 
     private final ExameRepository repository;
     private final ExameMapper mapper;
+    private final TenantContext tenantContext;
+    private final EmpresaRepository empresaRepository;
 
     @Override
     @Transactional(readOnly = true)
     public Page<ExameResponse> findAll(Pageable pageable, String search) {
+        Long empresaId = tenantContext.requireEmpresaId();
+
         if (search == null || search.isBlank()) {
-            log.info("Buscando exames paginados");
-            return repository.findAll(pageable).map(mapper::toResponse);
+            log.info("Buscando exames paginados para empresaId={}", empresaId);
+            return repository.findAllByEmpresaId(empresaId, pageable).map(mapper::toResponse);
         }
 
         String term = search.trim();
-        log.info("Buscando exames com filtro");
-        return repository.searchByTerm(term, pageable).map(mapper::toResponse);
+        log.info("Buscando exames com filtro para empresaId={}", empresaId);
+        return repository.searchByTermAndEmpresaId(empresaId, term, pageable).map(mapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExameResponse findById(Long id) {
-        log.info("Buscando exame por id: {}", id);
-        Exame exame = repository.findById(id)
+        Long empresaId = tenantContext.requireEmpresaId();
+        log.info("Buscando exame por id={} empresaId={}", id, empresaId);
+        Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado com ID: " + id));
         return mapper.toResponse(exame);
     }
@@ -48,13 +56,16 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional
     public ExameResponse create(ExameRequest request) {
-        log.info("Criando novo exame");
-        
-        if (repository.existsByCodigo(request.codigo())) {
+        Long empresaId = tenantContext.requireEmpresaId();
+        log.info("Criando novo exame para empresaId={}", empresaId);
+
+        if (repository.existsByCodigoAndEmpresaId(request.codigo(), empresaId)) {
             throw new BusinessException("Código já cadastrado no sistema.");
         }
 
+        Empresa empresa = empresaRepository.getReferenceById(empresaId);
         Exame exame = mapper.toEntity(request);
+        exame.setEmpresa(empresa);
         Exame saved = repository.save(exame);
         return mapper.toResponse(saved);
     }
@@ -62,12 +73,13 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional
     public ExameResponse update(Long id, ExameRequest request) {
-        log.info("Atualizando exame com id: {}", id);
-        
-        Exame exame = repository.findById(id)
+        Long empresaId = tenantContext.requireEmpresaId();
+        log.info("Atualizando exame id={} empresaId={}", id, empresaId);
+
+        Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado com ID: " + id));
 
-        if (repository.existsByCodigoAndIdNot(request.codigo(), id)) {
+        if (repository.existsByCodigoAndEmpresaIdAndIdNot(request.codigo(), empresaId, id)) {
             throw new BusinessException("Código já cadastrado por outro exame.");
         }
 
@@ -79,8 +91,9 @@ public class ExameServiceImpl implements ExameService {
     @Override
     @Transactional
     public void delete(Long id) {
-        log.info("Deletando exame com id: {}", id);
-        Exame exame = repository.findById(id)
+        Long empresaId = tenantContext.requireEmpresaId();
+        log.info("Deletando exame id={} empresaId={}", id, empresaId);
+        Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado com ID: " + id));
         repository.delete(exame);
     }

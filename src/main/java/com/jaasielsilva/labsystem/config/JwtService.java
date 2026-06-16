@@ -10,12 +10,14 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
 public class JwtService {
 
     private static final String CLAIM_PERFIL = "perfil";
+    private static final String CLAIM_EMPRESA_ID = "empresaId";
     private static final String CLAIM_TYPE = "type";
     private static final String TYPE_ACCESS = "access";
     private static final String TYPE_REFRESH = "refresh";
@@ -28,16 +30,28 @@ public class JwtService {
         this.secretKey = Keys.hmacShaKeyFor(resolveSecretBytes(properties.secret()));
     }
 
-    public String generateAccessToken(String email, Perfil perfil) {
-        return buildToken(email, perfil, properties.accessExpirationMs(), TYPE_ACCESS);
+    public String generateAccessToken(String email, Perfil perfil, Long empresaId) {
+        return buildToken(email, perfil, empresaId, properties.accessExpirationMs(), TYPE_ACCESS);
     }
 
-    public String generateRefreshToken(String email, Perfil perfil) {
-        return buildToken(email, perfil, properties.refreshExpirationMs(), TYPE_REFRESH);
+    public String generateRefreshToken(String email, Perfil perfil, Long empresaId) {
+        return buildToken(email, perfil, empresaId, properties.refreshExpirationMs(), TYPE_REFRESH);
     }
 
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public Long extractEmpresaId(String token) {
+        Claims claims = parseClaims(token);
+        Object value = claims.get(CLAIM_EMPRESA_ID);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        return Long.parseLong(value.toString());
     }
 
     public boolean isAccessToken(String token) {
@@ -57,13 +71,18 @@ public class JwtService {
         }
     }
 
-    private String buildToken(String email, Perfil perfil, long expirationMs, String type) {
+    private String buildToken(String email, Perfil perfil, Long empresaId, long expirationMs, String type) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(CLAIM_PERFIL, perfil.name());
+        claims.put(CLAIM_TYPE, type);
+        claims.put(CLAIM_EMPRESA_ID, empresaId);
+
         return Jwts.builder()
                 .subject(email)
-                .claims(Map.of(CLAIM_PERFIL, perfil.name(), CLAIM_TYPE, type))
+                .claims(claims)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(secretKey)

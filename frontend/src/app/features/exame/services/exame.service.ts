@@ -1,41 +1,36 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
 import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '../../../shared/models/api-response.model';
 import { Exame } from '../models/exame.model';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  timestamp: string;
-}
-
-interface PageResponse<T> {
-  content: T[];
-  totalPages: number;
-  totalElements: number;
-}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ExameService {
-
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/exames`;
 
   getAll(
-    page: number,
-    size: number,
-    sortBy: string,
-    sortDir: string,
-    search: string
-  ): Observable<ApiResponse<PageResponse<Exame>>> {
-    return this.http.get<ApiResponse<PageResponse<Exame>>>(
-      `${this.apiUrl}?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}&search=${search}`
-    );
+    page: number = 0,
+    size: number = 10,
+    sortBy: string = 'nome',
+    sortDir: string = 'asc',
+    search?: string
+  ): Observable<ApiResponse<any>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sortBy', sortBy)
+      .set('sortDir', sortDir);
+
+    const q = search?.trim();
+    if (q) {
+      params = params.set('q', q);
+    }
+
+    return this.http.get<ApiResponse<any>>(this.apiUrl, { params });
   }
 
   getById(id: number): Observable<ApiResponse<Exame>> {

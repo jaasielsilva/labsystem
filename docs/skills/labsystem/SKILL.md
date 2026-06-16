@@ -51,6 +51,10 @@ Snapshot sincronizado com o repositório. Atualizar ao fechar cada entrega.
 | **Design System LS1 Light** | Tema claro hospitalar em `styles.css`; playground `/dev/ui` (ADMIN) |
 | **App Shell** | Sidebar modular + topbar; `core/layout/app-shell/`; menu em `nav.config.ts` |
 | **Toast LS1** | `ToastService` + `app-toast-container` — feedback global sucesso/erro |
+| **TenantContextService** | Lê `empresaId` / `empresaNome` do `/auth/me` após login |
+| **Fundação tenant-ready (Fase 1)** | `empresas`, `empresa_id`, JWT `empresaId`, filtro nos services Cliente/Exame/Usuário |
+| Módulo **Empresa** (governança) | CRUD back + front em `/governanca/empresas` (somente ADMIN) |
+| Módulo **Exame** (catálogo) | CRUD back + front em `/exames`, tenant-aware, seed demo, testes unitários |
 
 **Usuários dev (senha no `DataSeeder`):**
 
@@ -66,8 +70,8 @@ Snapshot sincronizado com o repositório. Atualizar ao fechar cada entrega.
 |------|----------|
 | Docker, compose, `.env.example`, `application-prod.yml` | 🔲 |
 | traceId/MDC, logs prod refinados | 🔲 |
-| Planos SaaS, multi-tenant | 🔲 |
-| Módulos Exames, Pedidos, Resultados | 🔲 |
+| **SaaS completo** (planos, limites, onboarding multi-empresa) | 🔲 |
+| Módulos Pedidos, Resultados | 🔲 |
 | OpenAPI / Swagger | 🔲 |
 
 ### Referência viva
@@ -101,7 +105,7 @@ Tema **claro hospitalar / laboratório**: fundo branco e azul clínico, cards br
 
 ### Próxima entrega recomendada
 
-**Módulo Exames (catálogo)** ou **Docker/prod** — conforme priorização da seção 3.
+**Docker/prod** ou **módulo Pedidos** — conforme priorização da seção 3.
 
 ---
 
@@ -116,10 +120,12 @@ Cliente → Pedido → Exame(s) → Resultado → Entrega/Cobrança
 Ordem sugerida de evolução:
 
 1. Autenticação e perfis
-2. Cadastros base (clientes, catálogo de exames)
-3. Fluxo principal (pedido → resultado)
-4. Relatórios e exportação
-5. Integrações
+2. **Fundação tenant-ready** — `empresas`, `empresa_id`, JWT, filtro nos services (seção 6.1)
+3. Cadastros base (clientes, catálogo de exames) — **sempre com `empresa_id`**
+4. Fluxo principal (pedido → resultado)
+5. Relatórios e exportação
+6. Integrações
+7. **SaaS completo** — planos, limites, onboarding (seção 6.1 — Fase 3)
 
 Feature fora desse fluxo exige justificativa explícita.
 
@@ -164,6 +170,8 @@ src/main/java/.../features/{feature}/
 - Resposta sempre `ApiResponse<T>`
 - SLF4J — nunca `System.out.println`
 - Migration: `V{n}__descricao.sql` — tabelas `snake_case` com `id`, `created_at`, `updated_at`
+- Tabelas de **negócio** (clientes, exames, pedidos…): coluna `empresa_id` FK → `empresas` (seção 6.1)
+- Services de negócio: **sempre** filtrar pelo `empresaId` do JWT — nunca confiar no body
 
 ### API REST
 
@@ -196,14 +204,16 @@ core/
 ├── navigation/
 │   ├── nav.config.ts     → seções e itens do menu (roles, disabled)
 │   └── nav.service.ts    → filtra menu por perfil
-└── services/tenant-context.service.ts  → empresa (placeholder até multi-tenant)
+└── services/tenant-context.service.ts  → empresa ativa na UI (Fase 1: ler de /auth/me)
 ```
 
 - **Novo módulo:** adicionar item em `nav.config.ts` + rota lazy em `app.routes.ts` (children do shell)
-- **Governança:** seção `governanca` — só `ADMIN`; placeholders até implementar
+- **Governança:** seção `governanca` — só `ADMIN`; CRUD Empresa em `/governanca/empresas`
 - **Itens `disabled: true`:** visíveis no menu com badge "Em breve" (roadmap)
 - **Topbar:** empresa + usuário + perfil; **sidebar:** navegação por módulo
 - Login (`/login`) fica **fora** do shell
+
+> **CRUD Empresa (governança)** ≠ **isolamento multi-tenant**. O cadastro de empresas é Fase 2; o filtro de dados por `empresa_id` é Fase 1 (seção 6.1).
 
 ---
 
@@ -268,7 +278,7 @@ Textos em **português claro** — nunca "Erro 500" ou jargão técnico na UI.
 
 ---
 
-## 6. Usuários, perfis e planos
+## 6. Usuários, perfis, empresas e tenant
 
 Obrigatório para produto multi-usuário ou SaaS.
 
@@ -279,15 +289,65 @@ Obrigatório para produto multi-usuário ou SaaS.
 - JWT: login, refresh, `/auth/me`
 - Senha BCrypt; nunca logar nem retornar senha/token
 
-**Planos (quando SaaS):** tabela `planos` com limites e flags de feature. Validar limite no Service:
+### 6.1 Multi-tenant em fases (padrão oficial)
+
+Não implementar SaaS completo de uma vez. Seguir **três fases** — a Fase 1 deve ser feita **antes** de Pedidos/Resultados e de preferência **antes** de novos módulos de negócio.
+
+| Fase | Nome | O que entrega | Status |
+|------|------|---------------|--------|
+| **1** | **Tenant-ready** | Banco e código prontos para isolamento; operação continua com 1 empresa | ✅ |
+| **2** | **Governança** | CRUD de empresas (`/governanca/empresas`); só ADMIN cria/edita | ✅ |
+| **3** | **SaaS completo** | Planos, limites, onboarding, múltiplos laboratórios em produção | 🔲 |
+
+#### Fase 1 — Tenant-ready (fazer agora)
+
+Objetivo: **uma empresa no seed**, mas **todo dado de negócio já nasce isolável**.
+
+**Backend**
+
+1. Tabela `empresas` (migration Flyway)
+2. Coluna `empresa_id` NOT NULL em `usuarios` (FK → `empresas`)
+3. Coluna `empresa_id` NOT NULL em tabelas de negócio existentes (`clientes`, `exames`, …) — migration retroativa
+4. Claim `empresaId` no JWT (access + refresh)
+5. `UsuarioResponse` e `/auth/me` retornam `empresaId` e `empresaNome`
+6. Helper/resolver de tenant no backend (ex.: `TenantContext` a partir do JWT)
+7. **Todo** Repository/Service de negócio filtra por `empresaId` do token
+8. Seed dev: 1 empresa (`Laboratório Demo`) + usuários vinculados; dados existentes migrados para essa empresa
+
+**Frontend**
+
+1. `TenantContextService` lê `empresaId` / `empresaNome` do `/auth/me` (não hardcoded)
+2. App shell (sidebar/topbar) exibe empresa real do login
+3. Novos services **não** enviam `empresaId` no body — o backend resolve pelo JWT
+
+**Regras invioláveis**
+
+- Nome da coluna no banco: `empresa_id` (sinônimo conceitual de `tenant_id` neste projeto)
+- **Nunca** confiar em `empresaId` vindo do body ou query para autorizar acesso
+- **Nunca** criar tabela de negócio nova sem `empresa_id`
+- Em dev, 1 empresa é suficiente — não exige UI de troca de tenant
+
+#### Fase 2 — Governança (CRUD Empresa)
+
+- Módulo `features/empresa/` (back) + `governanca/empresa/` (front)
+- Endpoints `/api/v1/empresas` — somente `ADMIN`
+- Cadastro de novas empresas; vínculo usuário ↔ empresa no módulo Usuários
+- Ainda **sem** seletor de tenant na UI para operador (cada usuário pertence a uma empresa)
+
+#### Fase 3 — SaaS completo (quando houver 2º laboratório real)
+
+- Tabela `planos` com limites e flags de feature
+- Validação de limite no Service:
 
 ```java
-if (planoService.limiteAtingido(tenantId, "clientes")) {
+if (planoService.limiteAtingido(empresaId, "clientes")) {
     throw new BusinessException("Limite do plano atingido.");
 }
 ```
 
-**Multi-tenant:** `tenant_id` em tabelas de negócio; filtrar sempre pelo JWT — nunca confiar no body.
+- Onboarding de nova empresa, billing, troca de contexto (se aplicável)
+
+**Resumo:** migrar a **fundação (Fase 1)** cedo é barato hoje e caro depois. **Não** parar o fluxo principal para construir Fase 3 antes da hora.
 
 ---
 
@@ -341,6 +401,7 @@ Antes de considerar qualquer entrega concluída:
 ### Segurança
 - [ ] Endpoint protegido se dados sensíveis
 - [ ] Sem secrets hardcoded
+- [ ] Módulo de negócio: queries filtradas por `empresa_id` do JWT (seção 6.1)
 
 ### Operação
 - [ ] Logs SLF4J nas operações importantes
@@ -357,6 +418,9 @@ Antes de considerar qualquer entrega concluída:
 - Alterar banco manualmente (sem Flyway)
 - Feature "porque o concorrente tem"
 - Campos no formulário que a operação não usa
+- Query de negócio **sem** filtro por `empresa_id`
+- Aceitar `empresaId` do body do cliente para decidir tenant
+- CRUD de negócio em tabela nova **sem** coluna `empresa_id`
 
 ---
 

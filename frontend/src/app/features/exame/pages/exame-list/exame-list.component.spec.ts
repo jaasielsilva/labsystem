@@ -1,19 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { ExameListComponent } from './exame-list.component';
 
-import { ExameList } from '../exame-list.component';
-
-describe('ExameList', () => {
-  let component: ExameList;
-  let fixture: ComponentFixture<ExameList>;
+describe('ExameListComponent', () => {
+  let component: ExameListComponent;
+  let fixture: ComponentFixture<ExameListComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ExameList],
+      imports: [ExameListComponent],
+      providers: [provideRouter([])]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ExameList);
+    fixture = TestBed.createComponent(ExameListComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {

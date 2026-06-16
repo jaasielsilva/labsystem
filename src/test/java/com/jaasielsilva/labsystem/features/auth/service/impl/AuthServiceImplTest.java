@@ -8,6 +8,7 @@ import com.jaasielsilva.labsystem.features.auth.dto.RefreshTokenRequest;
 import com.jaasielsilva.labsystem.features.auth.entity.Perfil;
 import com.jaasielsilva.labsystem.features.auth.entity.Usuario;
 import com.jaasielsilva.labsystem.features.auth.repository.UsuarioRepository;
+import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,13 +18,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
+
+    private static final Long EMPRESA_ID = 1L;
 
     @Mock
     private AuthenticationManager authenticationManager;
@@ -39,9 +45,18 @@ class AuthServiceImplTest {
 
     private Usuario usuario;
     private LoginRequest loginRequest;
+    private Empresa empresa;
 
     @BeforeEach
     void setUp() {
+        empresa = Empresa.builder()
+                .id(EMPRESA_ID)
+                .nome("Laboratório Demo")
+                .cnpj("00000000000000")
+                .email("contato@labsystem.local")
+                .ativo(true)
+                .build();
+
         usuario = Usuario.builder()
                 .id(1L)
                 .nome("Admin")
@@ -49,6 +64,7 @@ class AuthServiceImplTest {
                 .senhaHash("hash")
                 .perfil(Perfil.ADMIN)
                 .ativo(true)
+                .empresa(empresa)
                 .build();
 
         loginRequest = new LoginRequest("admin@labsystem.local", "admin123");
@@ -59,14 +75,16 @@ class AuthServiceImplTest {
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(null);
         when(usuarioRepository.findByEmail(loginRequest.email())).thenReturn(Optional.of(usuario));
-        when(jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil())).thenReturn("access");
-        when(jwtService.generateRefreshToken(usuario.getEmail(), usuario.getPerfil())).thenReturn("refresh");
+        when(jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil(), EMPRESA_ID)).thenReturn("access");
+        when(jwtService.generateRefreshToken(usuario.getEmail(), usuario.getPerfil(), EMPRESA_ID)).thenReturn("refresh");
 
         LoginResponse response = authService.login(loginRequest);
 
         assertEquals("access", response.accessToken());
         assertEquals("refresh", response.refreshToken());
         assertEquals("admin@labsystem.local", response.usuario().email());
+        assertEquals(EMPRESA_ID, response.usuario().empresaId());
+        assertEquals("Laboratório Demo", response.usuario().empresaNome());
     }
 
     @Test
@@ -96,8 +114,8 @@ class AuthServiceImplTest {
         when(jwtService.extractEmail("refresh-token")).thenReturn(usuario.getEmail());
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.of(usuario));
         when(jwtService.isTokenValid("refresh-token", usuario.getEmail())).thenReturn(true);
-        when(jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil())).thenReturn("new-access");
-        when(jwtService.generateRefreshToken(usuario.getEmail(), usuario.getPerfil())).thenReturn("new-refresh");
+        when(jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil(), EMPRESA_ID)).thenReturn("new-access");
+        when(jwtService.generateRefreshToken(usuario.getEmail(), usuario.getPerfil(), EMPRESA_ID)).thenReturn("new-refresh");
 
         LoginResponse response = authService.refresh(request);
 

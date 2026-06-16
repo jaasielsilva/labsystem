@@ -1,0 +1,193 @@
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+
+    <a routerLink="/governanca/empresas" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Voltar
+    </a>
+
+    <h1 class="page-title-sm">
+      {{ isEditMode ? 'Editar empresa' : 'Nova empresa' }}
+    </h1>
+
+    <p class="page-subtitle">
+      {{ isEditMode ? 'Atualize os dados da empresa.' : 'Preencha os dados para cadastrar a empresa.' }}
+    </p>
+
+  </header>
+
+  <div class="glass-card form-card">
+
+    <div class="loader-overlay" *ngIf="loading">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando dados da empresa...</p>
+      </div>
+    </div>
+
+    <form [formGroup]="empresaForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+
+      <!-- Nome / Razão Social -->
+      <div class="form-group">
+        <label for="nome" class="form-label">Razão Social *</label>
+        <input
+          type="text"
+          id="nome"
+          formControlName="nome"
+          class="form-control"
+          [class.is-invalid]="f['nome'].touched && f['nome'].invalid"
+          placeholder="Ex: Empresa XYZ LTDA"
+        />
+
+        <div class="invalid-feedback" *ngIf="f['nome'].touched && f['nome'].errors">
+          <span *ngIf="f['nome'].errors['required']">A razão social é obrigatória.</span>
+          <span *ngIf="f['nome'].errors['maxlength']">Máximo de 150 caracteres.</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+
+        <!-- CNPJ -->
+        <div class="form-group col-half">
+          <label for="cnpj" class="form-label">CNPJ *</label>
+          <input
+            type="text"
+            id="cnpj"
+            formControlName="cnpj"
+            class="form-control"
+            [class.is-invalid]="f['cnpj'].touched && f['cnpj'].invalid"
+            placeholder="Apenas números"
+            maxlength="14"
+          />
+
+          <div class="invalid-feedback" *ngIf="f['cnpj'].touched && f['cnpj'].errors">
+            <span *ngIf="f['cnpj'].errors['required']">O CNPJ é obrigatório.</span>
+            <span *ngIf="f['cnpj'].errors['pattern']">CNPJ inválido.</span>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group col-half">
+          <label for="ativo" class="form-label">Status *</label>
+
+          <select
+            id="ativo"
+            formControlName="ativo"
+            class="form-control"
+            [class.is-invalid]="f['ativo'].touched && f['ativo'].invalid">
+
+            <option [ngValue]="true">Ativa</option>
+            <option [ngValue]="false">Inativa</option>
+
+          </select>
+        </div>
+
+      </div>
+
+      <div class="form-row">
+
+        <!-- E-mail -->
+        <div class="form-group col-half">
+          <label for="email" class="form-label">E-mail *</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-control"
+            [class.is-invalid]="f['email'].touched && f['email'].invalid"
+            placeholder="contato@empresa.com"
+          />
+
+          <div class="invalid-feedback" *ngIf="f['email'].touched && f['email'].errors">
+            <span *ngIf="f['email'].errors['required']">O e-mail é obrigatório.</span>
+            <span *ngIf="f['email'].errors['email']">E-mail inválido.</span>
+          </div>
+        </div>
+
+        <!-- Telefone -->
+        <div class="form-group col-half">
+          <label for="telefone" class="form-label">Telefone</label>
+          <input
+            type="text"
+            id="telefone"
+            formControlName="telefone"
+            class="form-control"
+            [class.is-invalid]="f['telefone'].touched && f['telefone'].invalid"
+            placeholder="Apenas números com DDD"
+          />
+          <div class="invalid-feedback" *ngIf="f['telefone'].touched && f['telefone'].errors">
+            <span *ngIf="f['telefone'].errors['maxlength']">O telefone não deve exceder 20 caracteres.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Endereço -->
+      <div class="form-group">
+        <label for="endereco" class="form-label">Endereço</label>
+        <input
+          type="text"
+          id="endereco"
+          formControlName="endereco"
+          class="form-control"
+          placeholder="Rua, número, bairro"
+        />
+      </div>
+
+      <div class="form-row">
+
+        <!-- Cidade -->
+        <div class="form-group col-half">
+          <label for="cidade" class="form-label">Cidade</label>
+          <input
+            type="text"
+            id="cidade"
+            formControlName="cidade"
+            class="form-control"
+          />
+        </div>
+
+        <!-- UF -->
+        <div class="form-group col-half">
+          <label for="uf" class="form-label">UF</label>
+          <input
+            type="text"
+            id="uf"
+            formControlName="uf"
+            class="form-control"
+            maxlength="2"
+          />
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <footer class="form-actions">
+
+        <button type="button"
+                class="btn btn-secondary"
+                routerLink="/governanca/empresas"
+                [disabled]="saving">
+          Cancelar
+        </button>
+
+        <button type="submit"
+                class="btn btn-primary btn-sm"
+                [disabled]="empresaForm.invalid || saving">
+
+          <span class="spinner-sm" *ngIf="saving"></span>
+
+          {{ saving ? 'Salvando...' : 'Salvar' }}
+        </button>
+
+      </footer>
+
+    </form>
+
+  </div>
+</div>

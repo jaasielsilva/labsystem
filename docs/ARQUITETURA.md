@@ -44,6 +44,7 @@ labsystem/
 │   │   │   └── features/
 │   │   │       ├── auth/                    ✅ JWT
 │   │   │       ├── cliente/                 ✅ referência CRUD
+│   │   │       ├── empresa/                 ✅ governança + tenant
 │   │   │       └── {feature}/               ← novo módulo
 │   │   │           ├── entity/ repository/ dto/ mapper/
 │   │   │           ├── service/impl/ controller/
@@ -72,6 +73,7 @@ frontend/
 │   │   │   └── models/api-response.model.ts ✅
 │   │   ├── features/
 │   │   │   ├── cliente/                     ✅ referência
+│   │   │   ├── governanca/empresa/          ✅
 │   │   │   └── {feature}/
 │   │   │       ├── models/ services/ pages/ {feature}.routes.ts
 │   │   ├── app.component.ts
@@ -130,6 +132,7 @@ labsystem/
 - Tabelas em `snake_case` plural (ex: `clientes`, `pedido_itens`)
 - Toda tabela deve ter: `id`, `created_at`, `updated_at`
 - Foreign keys explícitas no SQL de migration
+- Tabelas de **negócio** devem ter `empresa_id NOT NULL` referenciando `empresas` (ver seção Multi-tenant)
 
 ### Docker
 
@@ -197,16 +200,68 @@ DELETE /api/v1/{recurso}/{id}   → deletar
 
 ---
 
+## Multi-tenant e empresas
+
+O Labsystem evolui para SaaS em **três fases** (detalhes na skill `/labsystem`, seção 6.1). Hoje o código ainda é **mono-tenant**; a fundação abaixo é o **alvo obrigatório** antes de Pedidos/Resultados.
+
+### Modelo de dados (alvo)
+
+```
+empresas
+├── id, nome, cnpj, email, …
+└── created_at, updated_at
+
+usuarios
+├── empresa_id  → FK empresas (NOT NULL)
+└── …
+
+clientes | exames | pedidos | …
+├── empresa_id  → FK empresas (NOT NULL)
+└── …
+```
+
+- No código e nas migrations usar **`empresa_id`** (equivalente conceitual a `tenant_id`).
+- Tabela `empresas` é criada na **Fase 1**; CRUD administrativo na **Fase 2** (`/api/v1/empresas`, front `/governanca/empresas`).
+
+### Isolamento (Fase 1 — tenant-ready)
+
+| Camada | Regra |
+|--------|--------|
+| JWT | Claim `empresaId` no access/refresh token |
+| `/auth/me` | Retorna `empresaId` e `empresaNome` |
+| Service | Toda operação de negócio filtra pelo `empresaId` do JWT |
+| API | **Nunca** usar `empresaId` do body para autorizar ou filtrar |
+| Frontend | `TenantContextService` preenchido pelo login (`/auth/me`) |
+| Seed dev | Uma empresa (`Laboratório Demo`); dados legados migrados para ela |
+
+### Fases (resumo)
+
+| Fase | Escopo | Status |
+|------|--------|--------|
+| **1 — Tenant-ready** | `empresas`, `empresa_id`, JWT, filtro nos services | ✅ |
+| **2 — Governança** | CRUD Empresa + vínculo usuário ↔ empresa | ✅ |
+| **3 — SaaS** | Planos, limites, onboarding multi-laboratório | 🔲 |
+
+### O que **não** confundir
+
+- **Módulo Empresa (governança):** tela para ADMIN cadastrar laboratórios.
+- **Isolamento tenant-ready:** cada registro de negócio pertence a uma empresa; usuário só vê dados da sua.
+
+---
+
 ## Módulos do Projeto
 
 | Módulo | Backend | Frontend | DoD empresarial |
 |--------|---------|----------|-----------------|
 | Setup base (ApiResponse, exceptions, Flyway) | ✅ | ✅ | ✅ |
-| Clientes | ✅ | ✅ | ⚠️ auth ok; Docker 🔲 |
 | Autenticação (JWT + perfis) | ✅ | ✅ | ✅ |
-| Exames (catálogo) | 🔲 | 🔲 | 🔲 |
+| **Fundação tenant-ready** (seção Multi-tenant) | ✅ | ✅ | ✅ |
+| Clientes | ✅ | ✅ | ✅ |
+| Empresas (governança) | ✅ | ✅ | ✅ |
+| Exames (catálogo) | ✅ | ✅ | ✅ |
 | Pedidos | 🔲 | 🔲 | 🔲 |
 | Resultados | 🔲 | 🔲 | 🔲 |
+| SaaS (planos, limites) | 🔲 | 🔲 | 🔲 |
 
 > Atualize esta tabela ao fechar cada módulo. "DoD empresarial" = checklist da skill `/labsystem`.
 

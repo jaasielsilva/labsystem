@@ -19,4 +19,6 @@ public class UsuarioRequest {
     private boolean ativo;
 
     private String perfil;
+
+    private Long empresaId;
 }

@@ -1,13 +1,12 @@
+export type TipoAmostra = 'SANGUE' | 'URINA' | 'FEZES' | 'OUTRO';
+
 export interface Exame {
   id?: number;
   codigo: string;
   nome: string;
   descricao?: string;
-  categoria?: {
-    id: number;
-    nome: string;
-  };
-  tipoAmostra: 'SANGUE' | 'URINA' | 'FEZES' | 'OUTRO';
+  categoria?: string;
+  tipoAmostra: TipoAmostra;
   prazoDias: number;
   valor?: number;
   ativo: boolean;

@@ -69,6 +69,7 @@
             E-mail
             <span class="sort-icon" *ngIf="sortBy === 'email'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
           </th>
+          <th class="col-hide-md">Empresa</th>
           <th (click)="setSort('perfil')" class="sortable">
             Perfil
             <span class="sort-icon" *ngIf="sortBy === 'perfil'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -87,6 +88,7 @@
             </span>
           </td>
           <td class="email-col">{{ u.email }}</td>
+          <td class="col-hide-md cell-muted">{{ u.empresaNome || '-' }}</td>
           <td class="cell-muted">{{ perfilLabel(u.perfil) }}</td>
           <td>
             <div class="action-buttons" *ngIf="confirmDeleteId !== u.id">
@@ -116,11 +118,12 @@
           <td><span class="cell-name filler-spacer">&nbsp;</span></td>
           <td><span class="badge badge-gray filler-spacer">&nbsp;</span></td>
           <td class="email-col filler-spacer">&nbsp;</td>
+          <td class="col-hide-md cell-muted filler-spacer">&nbsp;</td>
           <td class="cell-muted filler-spacer">&nbsp;</td>
           <td><span class="filler-spacer action-spacer">&nbsp;</span></td>
         </tr>
         <tr *ngIf="usuarios.length === 0 && !loading()">
-          <td colspan="5">
+          <td colspan="6">
             <div class="empty-state">
               <div class="empty-state-icon">{{ hasActiveSearch ? '🔍' : '🔐' }}</div>
               @if (hasActiveSearch) {

@@ -81,8 +81,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginResponse buildLoginResponse(Usuario usuario) {
-        String accessToken = jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil());
-        String refreshToken = jwtService.generateRefreshToken(usuario.getEmail(), usuario.getPerfil());
+        Long empresaId = usuario.getEmpresa().getId();
+        String accessToken = jwtService.generateAccessToken(usuario.getEmail(), usuario.getPerfil(), empresaId);
+        String refreshToken = jwtService.generateRefreshToken(usuario.getEmail(), usuario.getPerfil(), empresaId);
         return new LoginResponse(accessToken, refreshToken, toResponse(usuario));
     }
 
@@ -91,7 +92,9 @@ public class AuthServiceImpl implements AuthService {
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getPerfil()
+                usuario.getPerfil(),
+                usuario.getEmpresa().getId(),
+                usuario.getEmpresa().getNome()
         );
     }
 }

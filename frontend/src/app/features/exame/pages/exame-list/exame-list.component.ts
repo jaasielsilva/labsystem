@@ -203,4 +203,14 @@ export class ExameListComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  formatTipoAmostra(tipo: string): string {
+    const labels: Record<string, string> = {
+      SANGUE: 'Sangue',
+      URINA: 'Urina',
+      FEZES: 'Fezes',
+      OUTRO: 'Outro'
+    };
+    return labels[tipo] ?? tipo;
+  }
 }

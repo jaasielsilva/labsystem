@@ -1,19 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { ExameFormComponent } from './exame-form.component';
 
-import { ExameForm } from './exame-form.component';
-
-describe('ExameForm', () => {
-  let component: ExameForm;
-  let fixture: ComponentFixture<ExameForm>;
+describe('ExameFormComponent', () => {
+  let component: ExameFormComponent;
+  let fixture: ComponentFixture<ExameFormComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ExameForm],
+      imports: [ExameFormComponent],
+      providers: [provideRouter([])]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(ExameForm);
+    fixture = TestBed.createComponent(ExameFormComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {

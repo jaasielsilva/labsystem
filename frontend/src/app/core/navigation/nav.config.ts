@@ -91,7 +91,7 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         id: 'empresa',
         label: 'Empresa e plano',
-        route: '/governanca/empresa',
+        route: '/governanca/empresas',
         icon: '🏢',
         roles: ['ADMIN']
       },

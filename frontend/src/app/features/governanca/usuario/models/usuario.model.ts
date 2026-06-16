@@ -5,4 +5,6 @@ export interface Usuario {
   senha?: string;
   ativo: boolean;
   perfil: 'ADMIN' | 'OPERADOR' | 'VISUALIZADOR';
+  empresaId?: number;
+  empresaNome?: string;
 }

@@ -59,14 +59,11 @@ export const routes: Routes = [
       },
 
       {
-        path: 'governanca/empresa',
+        path: 'governanca/empresas',
         canActivate: [roleGuard('ADMIN')],
-        component: PlaceholderComponent,
-        data: {
-          title: 'Empresa e plano',
-          description: 'Dados da empresa, plano SaaS e limites de uso.',
-          icon: '🏢'
-        }
+        loadChildren: () =>
+          import('./features/governanca/empresa/empresa.routes')
+            .then(m => m.EMPRESA_ROUTES)
       },
 
       {

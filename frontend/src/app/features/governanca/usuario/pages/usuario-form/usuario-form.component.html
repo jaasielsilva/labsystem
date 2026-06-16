@@ -33,6 +33,23 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label for="empresaId" class="form-label">Empresa *</label>
+        <select
+          id="empresaId"
+          formControlName="empresaId"
+          class="form-control"
+          [class.is-invalid]="f['empresaId'].touched && f['empresaId'].invalid"
+          [disabled]="loadingEmpresas"
+        >
+          <option [ngValue]="null" disabled>Selecione a empresa...</option>
+          <option *ngFor="let e of empresas" [ngValue]="e.id">{{ e.nome }}</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="f['empresaId'].touched && f['empresaId'].errors">
+          <span *ngIf="f['empresaId'].errors['required']">Selecione a empresa do usuário.</span>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group col-half">
           <label for="email" class="form-label">E-mail *</label>

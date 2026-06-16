@@ -1,5 +1,6 @@
 package com.jaasielsilva.labsystem.features.auth.entity;
 
+import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -29,6 +30,10 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Perfil perfil;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Empresa empresa;
 
     @Column(nullable = false)
     @Builder.Default

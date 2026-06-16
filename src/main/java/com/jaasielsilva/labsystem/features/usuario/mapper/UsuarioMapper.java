@@ -16,6 +16,12 @@ public class UsuarioMapper {
         response.setEmail(usuario.getEmail());
         response.setAtivo(usuario.isAtivo());
         response.setPerfil(usuario.getPerfil() != null ? usuario.getPerfil().name() : null);
+
+        if (usuario.getEmpresa() != null) {
+            response.setEmpresaId(usuario.getEmpresa().getId());
+            response.setEmpresaNome(usuario.getEmpresa().getNome());
+        }
+
         return response;
     }
 

@@ -6,5 +6,7 @@ public record UsuarioResponse(
     Long id,
     String nome,
     String email,
-    Perfil perfil
+    Perfil perfil,
+    Long empresaId,
+    String empresaNome
 ) {}

@@ -68,7 +68,7 @@ export class ExameFormComponent implements OnInit {
       codigo: exameData.codigo,
       nome: exameData.nome,
       descricao: exameData.descricao || '',
-      categoria: exameData.categoria?.nome || '',
+      categoria: exameData.categoria || '',
       tipoAmostra: exameData.tipoAmostra,
       prazoDias: exameData.prazoDias,
       valor: exameData.valor,

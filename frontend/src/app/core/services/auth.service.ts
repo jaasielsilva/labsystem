@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../../shared/models/api-response.model';
 import { LoginRequest, LoginResponse } from '../models/auth.model';
 import { Perfil, Usuario } from '../models/usuario.model';
+import { TenantContextService } from './tenant-context.service';
 
 const ACCESS_TOKEN_KEY = 'labsystem_access_token';
 const REFRESH_TOKEN_KEY = 'labsystem_refresh_token';
@@ -14,6 +15,7 @@ const REFRESH_TOKEN_KEY = 'labsystem_refresh_token';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private tenant = inject(TenantContextService);
   private apiUrl = `${environment.apiUrl}/auth`;
 
   readonly usuarioAtual = signal<Usuario | null>(null);
@@ -46,7 +48,7 @@ export class AuthService {
     return this.http.get<ApiResponse<Usuario>>(`${this.apiUrl}/me`).pipe(
       tap((response) => {
         if (response.success && response.data) {
-          this.usuarioAtual.set(response.data);
+          this.syncUsuario(response.data);
         }
       })
     );
@@ -56,6 +58,7 @@ export class AuthService {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     this.usuarioAtual.set(null);
+    this.tenant.clear();
     if (!this.router.url.startsWith('/login')) {
       this.router.navigate(['/login']);
     }
@@ -90,5 +93,11 @@ export class AuthService {
     localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
     this.usuarioAtual.set(data.usuario);
+    this.tenant.syncFromUsuario(data.usuario);
+  }
+
+  private syncUsuario(usuario: Usuario): void {
+    this.usuarioAtual.set(usuario);
+    this.tenant.syncFromUsuario(usuario);
   }
 }

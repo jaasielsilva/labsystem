@@ -12,18 +12,33 @@ import java.util.Optional;
 
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
-    Optional<Cliente> findByCpf(String cpf);
-    boolean existsByCpf(String cpf);
-    boolean existsByEmail(String email);
-    boolean existsByCpfAndIdNot(String cpf, Long id);
-    boolean existsByEmailAndIdNot(String email, Long id);
+
+    Page<Cliente> findAllByEmpresaId(Long empresaId, Pageable pageable);
+
+    Optional<Cliente> findByIdAndEmpresaId(Long id, Long empresaId);
+
+    boolean existsByCpfAndEmpresaId(String cpf, Long empresaId);
+
+    boolean existsByEmailAndEmpresaId(String email, Long empresaId);
+
+    boolean existsByCpfAndEmpresaIdAndIdNot(String cpf, Long empresaId, Long id);
+
+    boolean existsByEmailAndEmpresaIdAndIdNot(String email, Long empresaId, Long id);
 
     @Query("""
-            SELECT c FROM Cliente c WHERE
+            SELECT c FROM Cliente c WHERE c.empresa.id = :empresaId AND (
             LOWER(c.nome) LIKE LOWER(CONCAT('%', :term, '%')) OR
             LOWER(c.email) LIKE LOWER(CONCAT('%', :term, '%')) OR
             (:digits <> '' AND c.cpf LIKE CONCAT('%', :digits, '%')) OR
             (:digits <> '' AND c.telefone IS NOT NULL AND c.telefone LIKE CONCAT('%', :digits, '%'))
+            )
             """)
-    Page<Cliente> searchByTerm(@Param("term") String term, @Param("digits") String digits, Pageable pageable);
+    Page<Cliente> searchByTermAndEmpresaId(
+            @Param("empresaId") Long empresaId,
+            @Param("term") String term,
+            @Param("digits") String digits,
+            Pageable pageable
+    );
+
+    long countByEmpresa_Id(Long empresaId);
 }

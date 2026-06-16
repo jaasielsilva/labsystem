@@ -1,0 +1,14 @@
+CREATE TABLE empresas (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    cnpj VARCHAR(14) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    telefone VARCHAR(20),
+    endereco VARCHAR(200),
+    cidade VARCHAR(100),
+    uf VARCHAR(2),
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_empresas_cnpj UNIQUE (cnpj)
+);
