@@ -24,7 +24,7 @@ public class UsuarioController {
     private final UsuarioService service;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<Page<UsuarioResponse>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -41,21 +41,21 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<UsuarioResponse>> getById(@PathVariable Long id) {
         UsuarioResponse response = service.findById(id);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<UsuarioResponse>> create(@Valid @RequestBody UsuarioRequest request) {
         UsuarioResponse response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Usuário criado com sucesso", response));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<UsuarioResponse>> update(
             @PathVariable Long id, 
             @Valid @RequestBody UsuarioRequest request) {
@@ -64,7 +64,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.ok("Usuário removido com sucesso", null));

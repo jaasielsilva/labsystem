@@ -23,7 +23,7 @@ public class ClienteController {
     private final ClienteService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("@tenantAccess.read()")
     public ResponseEntity<ApiResponse<Page<ClienteResponse>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -40,21 +40,21 @@ public class ClienteController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("@tenantAccess.read()")
     public ResponseEntity<ApiResponse<ClienteResponse>> getById(@PathVariable Long id) {
         ClienteResponse response = service.findById(id);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("@tenantAccess.write()")
     public ResponseEntity<ApiResponse<ClienteResponse>> create(@Valid @RequestBody ClienteRequest request) {
         ClienteResponse response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Cliente criado com sucesso", response));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("@tenantAccess.write()")
     public ResponseEntity<ApiResponse<ClienteResponse>> update(
             @PathVariable Long id, 
             @Valid @RequestBody ClienteRequest request) {
@@ -63,7 +63,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.ok("Cliente removido com sucesso", null));

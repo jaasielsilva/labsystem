@@ -23,7 +23,7 @@ public class ExameController {
     private final ExameService service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("@tenantAccess.read()")
     public ResponseEntity<ApiResponse<Page<ExameResponse>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -40,21 +40,21 @@ public class ExameController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("@tenantAccess.read()")
     public ResponseEntity<ApiResponse<ExameResponse>> getById(@PathVariable Long id) {
         ExameResponse response = service.findById(id);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("@tenantAccess.write()")
     public ResponseEntity<ApiResponse<ExameResponse>> create(@Valid @RequestBody ExameRequest request) {
         ExameResponse response = service.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok("Exame criado com sucesso", response));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("@tenantAccess.write()")
     public ResponseEntity<ApiResponse<ExameResponse>> update(
             @PathVariable Long id, 
             @Valid @RequestBody ExameRequest request) {
@@ -63,7 +63,7 @@ public class ExameController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.ok("Exame removido com sucesso", null));

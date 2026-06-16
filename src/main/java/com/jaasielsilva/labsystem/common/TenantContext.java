@@ -14,15 +14,19 @@ public class TenantContext {
         if (ImpersonationContext.isActive()) {
             return AccessScope.TENANT_IMPERSONATION;
         }
-        return AccessScope.fromPerfil(currentPerfil());
+        return AccessScope.fromPerfil(currentPerfilInternal());
     }
 
     public boolean isSuperAdmin() {
-        return currentPerfil() == Perfil.SUPER_ADMIN;
+        return currentPerfilInternal() == Perfil.SUPER_ADMIN;
     }
 
     public boolean isImpersonating() {
         return ImpersonationContext.isActive();
+    }
+
+    public Perfil currentPerfil() {
+        return currentPerfilInternal();
     }
 
     public Long requireTenantEmpresaId() {
@@ -54,7 +58,7 @@ public class TenantContext {
         throw new BusinessException("Contexto de empresa não disponível.");
     }
 
-    private Perfil currentPerfil() {
+    private Perfil currentPerfilInternal() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
