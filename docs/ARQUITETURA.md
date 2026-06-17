@@ -13,8 +13,8 @@
 | Frontend     | Angular 17+ (Standalone Components) | ✅ Ativo |
 | Banco        | MySQL 8                             | ✅ Ativo |
 | ORM          | Spring Data JPA + Hibernate         | ✅ Ativo |
-| Migrations   | Flyway                              | ✅ Ativo |
-| Segurança    | Spring Security + JWT               | ✅ JWT + RBAC |
+| Migrations   | Flyway (V1–V9)                      | ✅ Ativo |
+| Segurança    | Spring Security + JWT + RBAC        | ✅ Ativo |
 | Observabilidade | Actuator + SLF4J                 | ✅ health exposto |
 | Container    | Docker + Docker Compose             | 🔲 Pendente |
 | Docs API     | SpringDoc OpenAPI (Swagger UI)      | 🔲 Pendente |
@@ -34,27 +34,27 @@ labsystem/
 │   ├── main/
 │   │   ├── java/com/jaasielsilva/labsystem/
 │   │   │   ├── LabsystemApplication.java
-│   │   │   ├── config/
-│   │   │   │   ├── SecurityConfig.java      ✅
-│   │   │   │   ├── JwtService.java          ✅
-│   │   │   │   ├── JwtAuthenticationFilter.java ✅
-│   │   │   │   └── CorsConfig.java          ✅
-│   │   │   ├── exception/                   ✅
-│   │   │   ├── common/ApiResponse.java      ✅
+│   │   │   ├── config/                    ✅ Security, JWT, CORS
+│   │   │   ├── common/                    ✅ ApiResponse, TenantContext, AccessScope
+│   │   │   ├── exception/                 ✅
 │   │   │   └── features/
-│   │   │       ├── auth/                    ✅ JWT
-│   │   │       ├── cliente/                 ✅ referência CRUD
-│   │   │       ├── empresa/                 ✅ governança + tenant
-│   │   │       └── {feature}/               ← novo módulo
-│   │   │           ├── entity/ repository/ dto/ mapper/
-│   │   │           ├── service/impl/ controller/
+│   │   │       ├── auth/                  ✅
+│   │   │       ├── cliente/             ✅ referência CRUD tenant
+│   │   │       ├── exame/                 ✅
+│   │   │       ├── pedido/                ✅
+│   │   │       ├── resultado/             ✅
+│   │   │       ├── empresa/               ✅ entidade + DTOs
+│   │   │       ├── usuario/               ✅ governança tenant
+│   │   │       ├── platform/              ✅ SUPER_ADMIN, onboarding, impersonação
+│   │   │       └── tenant/security/       ✅ TenantAccessEvaluator
 │   │   └── resources/
-│   │       ├── application.yml              ✅
+│   │       ├── application.yml
 │   │       └── db/migration/
-│   │           ├── V1__init.sql             ✅
-│   │           └── V2__create_table_clientes.sql ✅
-│   └── test/java/.../features/{feature}/service/ ✅
-└── Dockerfile                               🔲 pendente
+│   │           ├── V1__init.sql … V7__super_admin_platform.sql
+│   │           ├── V8__create_table_pedidos.sql
+│   │           └── V9__create_table_resultados.sql
+│   └── test/java/.../features/*/service/  ✅
+└── Dockerfile                             🔲 pendente
 ```
 
 ### Frontend
@@ -63,44 +63,21 @@ labsystem/
 frontend/
 ├── src/
 │   ├── app/
-│   │   ├── core/                            ✅
-│   │   │   ├── components/toast-container/  ✅ feedback global
-│   │   │   ├── layout/app-shell/            ✅ sidebar + topbar
-│   │   │   ├── navigation/                  ✅ menu modular
-│   │   │   ├── interceptors/ guards/ services/ (incl. toast.service)
-│   │   ├── features/auth/pages/login/       ✅
-│   │   ├── shared/
-│   │   │   └── models/api-response.model.ts ✅
+│   │   ├── core/                          ✅
+│   │   │   ├── layout/app-shell/          ✅ sidebar + topbar
+│   │   │   ├── navigation/                ✅ nav.config.ts
+│   │   │   ├── guards/                    ✅ auth, tenant, superAdmin, role
+│   │   │   ├── interceptors/ services/
 │   │   ├── features/
-│   │   │   ├── cliente/                     ✅ referência
-│   │   │   ├── governanca/empresa/          ✅
-│   │   │   └── {feature}/
-│   │   │       ├── models/ services/ pages/ {feature}.routes.ts
-│   │   ├── app.component.ts
-│   │   ├── app.config.ts                    ✅ (interceptors 🔲)
-│   │   └── app.routes.ts                    ✅ lazy por feature
+│   │   │   ├── auth/                      ✅ login
+│   │   │   ├── cliente/ exame/ pedido/ resultado/  ✅ operacional tenant
+│   │   │   ├── governanca/usuario/        ✅ ADMIN tenant
+│   │   │   ├── plataforma/                ✅ laboratorios, usuarios globais
+│   │   │   └── governanca/empresa/        ✅ formulário laboratório (plataforma)
+│   │   └── app.routes.ts                  ✅ lazy loading
 │   └── environments/
-│       ├── environment.ts                   ✅
-│       └── environment.prod.ts              ✅
-├── Dockerfile                               🔲 pendente
+├── Dockerfile                             🔲 pendente
 └── package.json
-```
-
-### Raiz
-
-```
-labsystem/
-├── src/                         ← backend Spring Boot (não há pasta backend/)
-├── frontend/
-├── docs/
-│   ├── ARQUITETURA.md
-│   └── skills/labsystem/SKILL.md
-├── pom.xml
-├── .cursor/skills/              → junction para docs/skills
-├── docker-compose.yml           🔲 pendente
-├── docker-compose.prod.yml      🔲 pendente
-├── .env.example                 🔲 pendente
-└── .env                         ← nunca commitar
 ```
 
 ---
@@ -110,171 +87,176 @@ labsystem/
 ### Backend
 
 - Pacote raiz: `com.jaasielsilva.labsystem`
-- **Nunca expor a Entity diretamente na API** — sempre usar DTOs
-- Validações via `jakarta.validation` nas classes de Request DTO
-- Respostas sempre com o wrapper `ApiResponse<T>`
-- Logs com SLF4J — nunca `System.out.println`
-- Variáveis sensíveis sempre em `application.yml` via variáveis de ambiente
-- `ddl-auto: validate` em produção — nunca `create` ou `update`
+- **Nunca expor Entity na API** — sempre DTOs
+- Validações em Request DTO (`jakarta.validation`)
+- Respostas com `ApiResponse<T>`
+- Logs SLF4J — nunca `System.out.println`
+- `ddl-auto: validate` em produção
+- **Todo módulo de negócio:** filtrar por `empresa_id` do JWT via `TenantContext`
 
 ### Frontend
 
-- Sempre **Standalone Components** — sem NgModules
-- HttpClient centralizado em services — nunca em componentes diretamente
-- Interceptors para JWT e erros globais
-- URLs de API via `environment.ts`
-- Reactive Forms para formulários
-- Lazy loading por rota de feature
+- Standalone Components
+- HttpClient só em services
+- Interceptors JWT + erros
+- `environment.ts` para API URL
+- Reactive Forms
+- Lazy loading por feature
+- **Não enviar `empresaId` no body** — tenant vem do token
 
 ### Banco de Dados
 
-- Migrations **sempre via Flyway** — nunca alterar banco manualmente
-- Tabelas em `snake_case` plural (ex: `clientes`, `pedido_itens`)
-- Toda tabela deve ter: `id`, `created_at`, `updated_at`
-- Foreign keys explícitas no SQL de migration
-- Tabelas de **negócio** devem ter `empresa_id NOT NULL` referenciando `empresas` (ver seção Multi-tenant)
-
-### Docker
-
-- Multi-stage build em todos os Dockerfiles
-- Variáveis sensíveis via `.env` — nunca hardcoded no compose
-- Healthcheck nos serviços `db` e `backend`
-- Redes internas nomeadas
-
----
-
-## Fluxo de Criação de Módulo
-
-Ao criar uma nova feature, siga **sempre** esta ordem:
-
-```
-1. Entity (JPA)
-2. Migration SQL (Flyway)
-3. Repository (interface)
-4. DTOs (Request + Response)
-5. Service (interface + impl)
-6. Controller (REST)
-7. Testes unitários do Service
-8. Model Angular
-9. Service Angular
-10. Page + Form Angular (standalone)
-11. Rota lazy no app.routes.ts
-```
-
----
-
-## Padrão de Resposta da API
-
-Toda resposta da API usa o wrapper abaixo — nunca retornar objeto cru:
-
-```java
-public record ApiResponse<T>(
-    boolean success,
-    String message,
-    T data,
-    LocalDateTime timestamp
-) {
-    public static <T> ApiResponse<T> ok(T data) {
-        return new ApiResponse<>(true, "OK", data, LocalDateTime.now());
-    }
-    public static <T> ApiResponse<T> ok(String message, T data) {
-        return new ApiResponse<>(true, message, data, LocalDateTime.now());
-    }
-    public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, message, null, LocalDateTime.now());
-    }
-}
-```
+- Migrations **somente Flyway**
+- Tabelas `snake_case` plural (`clientes`, `pedido_itens`, `resultados`)
+- Colunas padrão: `id`, `created_at`, `updated_at` (onde aplicável)
+- FKs explícitas nas migrations
+- **Negócio:** `empresa_id NOT NULL` → `empresas` (ver Multi-tenant)
 
 ---
 
 ## Padrão de URL
 
+### Tenant (laboratório)
+
 ```
-GET    /api/v1/{recurso}         → listar (paginado)
-GET    /api/v1/{recurso}/{id}    → buscar por ID
-POST   /api/v1/{recurso}        → criar
-PUT    /api/v1/{recurso}/{id}    → atualizar
-DELETE /api/v1/{recurso}/{id}   → deletar
+GET    /api/v1/{recurso}              → listar (paginado, query `q`)
+GET    /api/v1/{recurso}/{id}
+POST   /api/v1/{recurso}
+PUT    /api/v1/{recurso}/{id}
+DELETE /api/v1/{recurso}/{id}
+```
+
+Exemplos: `/clientes`, `/exames`, `/pedidos`, `/resultados`, `/usuarios`
+
+Ações de domínio (quando necessário): `POST /pedidos/{id}/concluir`, `POST /resultados/{id}/liberar`
+
+### Plataforma (SUPER_ADMIN)
+
+```
+/api/v1/platform/empresas
+/api/v1/platform/usuarios
+/api/v1/platform/impersonate/{laboratorioId}
 ```
 
 ---
 
-## Multi-tenant e empresas
+## Multi-tenant por empresa
 
-O Labsystem evolui para SaaS em **três fases** (detalhes na skill `/labsystem`, seção 6.1). Hoje o código ainda é **mono-tenant**; a fundação abaixo é o **alvo obrigatório** antes de Pedidos/Resultados.
+O sistema **já é multi-tenant**: cada laboratório (`empresas.tipo = LABORATORIO`) é um tenant isolado por `empresa_id`.
 
-### Modelo de dados (alvo)
+> **Não confundir** isolamento por empresa (implementado) com **planos e billing** (Fase 4 — futuro).
+
+### Modelo de dados atual
 
 ```
 empresas
-├── id, nome, cnpj, email, …
+├── id, nome, cnpj, tipo (PLATAFORMA | LABORATORIO), …
 └── created_at, updated_at
 
 usuarios
-├── empresa_id  → FK empresas (NOT NULL)
+├── empresa_id → FK empresas (NOT NULL)
+└── perfil (SUPER_ADMIN | ADMIN | OPERADOR | VISUALIZADOR)
+
+clientes | exames | pedidos | resultados
+├── empresa_id → FK empresas (NOT NULL)
 └── …
 
-clientes | exames | pedidos | …
-├── empresa_id  → FK empresas (NOT NULL)
-└── …
+pedido_itens
+├── pedido_id → pedidos
+├── exame_id → exames
+└── (isolamento via pedido.empresa_id)
+
+resultados
+├── empresa_id → FK empresas
+├── pedido_item_id → UK (1 resultado por item)
+└── status, laudo, data_liberacao
 ```
 
-- No código e nas migrations usar **`empresa_id`** (equivalente conceitual a `tenant_id`).
-- Tabela `empresas` é criada na **Fase 1**; CRUD administrativo na **Fase 2** (`/api/v1/empresas`, front `/governanca/empresas`).
+- No código e migrations: **`empresa_id`** = identificador do tenant (sinônimo de `tenant_id`).
 
-### Isolamento (Fase 1 — tenant-ready)
+### Isolamento em runtime
 
-| Camada | Regra |
-|--------|--------|
-| JWT | Claim `empresaId` no access/refresh token |
-| `/auth/me` | Retorna `empresaId` e `empresaNome` |
-| Service | Toda operação de negócio filtra pelo `empresaId` do JWT |
-| API | **Nunca** usar `empresaId` do body para autorizar ou filtrar |
-| Frontend | `TenantContextService` preenchido pelo login (`/auth/me`) |
-| Seed dev | Uma empresa (`Laboratório Demo`); dados legados migrados para ela |
+| Camada | Implementação |
+|--------|----------------|
+| JWT | `empresaId`, `scope`, `actingEmpresaId` (impersonação) |
+| Backend | `TenantContext.requireTenantEmpresaId()` |
+| Autorização tenant | `@tenantAccess.read()` / `.write()` / `.admin()` |
+| Autorização plataforma | `@platformAccess.allow()` |
+| Repository | `findByIdAndEmpresaId`, `findAllByEmpresaId`, … |
+| Frontend | `tenantGuard`, `hasTenantAccess()`, `TenantContextService` |
 
-### Fases (resumo)
-
-| Fase | Escopo | Status |
-|------|--------|--------|
-| **1 — Tenant-ready** | `empresas`, `empresa_id`, JWT, filtro nos services | ✅ |
-| **2 — Governança** | CRUD Empresa + vínculo usuário ↔ empresa | ✅ |
-| **3 — SaaS** | Planos, limites, onboarding multi-laboratório | 🔲 |
+**Regra de ouro:** nunca usar `empresaId` do body ou query string para decidir qual tenant acessar.
 
 ### Perfis e escopos
 
-| Perfil | Escopo | API | Front |
-|--------|--------|-----|-------|
+| Perfil | Escopo | API principal | Front |
+|--------|--------|---------------|-------|
 | `SUPER_ADMIN` | Plataforma | `/api/v1/platform/**` | `/plataforma/*` |
-| `ADMIN` | Tenant (laboratório) | `/api/v1/*` filtrado por JWT | Operacional + governança tenant |
-| `OPERADOR` / `VISUALIZADOR` | Tenant | leitura/escrita conforme RBAC | Operacional |
+| `SUPER_ADMIN` (impersonação) | Tenant suporte | `/api/v1/*` com `actingEmpresaId` | operacional + banner |
+| `ADMIN` | Tenant | `/api/v1/*` | operacional + `/governanca/*` |
+| `OPERADOR` / `VISUALIZADOR` | Tenant | leitura/escrita conforme RBAC | operacional |
 
-- JWT claim `scope`: `PLATFORM` ou `TENANT`
-- Empresa `tipo`: `PLATAFORMA` (sentinela) ou `LABORATORIO`
+JWT `scope`: `PLATFORM`, `TENANT`, `TENANT_IMPERSONATION`
 
-### O que **não** confundir
+### Evolução em fases
 
-- **Plataforma (SUPER_ADMIN):** gerencia laboratórios e usuários globais.
-- **Tenant (ADMIN):** gerencia usuários e dados do próprio laboratório.
+| Fase | Escopo | Status |
+|------|--------|--------|
+| **1 — Tenant** | `empresa_id`, JWT, `TenantContext`, isolamento em services | ✅ |
+| **2 — Plataforma** | SUPER_ADMIN, laboratórios, usuários globais, onboarding, impersonação | ✅ |
+| **3 — Operacional** | Pedidos, Resultados | ✅ |
+| **4 — Comercial** | Planos, limites por recurso, billing/assinatura | 🔲 |
+
+#### Fase 4 — Planos + billing (roadmap, sem código)
+
+Previsto para monetização SaaS — **ortogonal** ao `empresa_id`:
+
+- Tabela `planos` (limites: usuários, clientes, pedidos/mês, módulos)
+- Vínculo empresa ↔ plano/assinatura
+- Checagem `limiteAtingido(empresaId, recurso)` nos services de criação
+- Integração com gateway de pagamento
+- UI de uso vs limite e upgrade
+
+Até a Fase 4, **todos os laboratórios têm acesso ilimitado** ao que está implementado.
 
 ---
 
 ## Módulos do Projeto
 
-| Módulo | Backend | Frontend | DoD empresarial |
-|--------|---------|----------|-----------------|
-| Setup base (ApiResponse, exceptions, Flyway) | ✅ | ✅ | ✅ |
-| Autenticação (JWT + perfis) | ✅ | ✅ | ✅ |
-| **Fundação tenant-ready** (seção Multi-tenant) | ✅ | ✅ | ✅ |
+| Módulo | Backend | Frontend | Tenant-aware |
+|--------|---------|----------|--------------|
+| Setup base | ✅ | ✅ | — |
+| Autenticação JWT + perfis | ✅ | ✅ | — |
 | Clientes | ✅ | ✅ | ✅ |
-| Empresas (governança) | ✅ | ✅ | ✅ |
 | Exames (catálogo) | ✅ | ✅ | ✅ |
-| Pedidos | 🔲 | 🔲 | 🔲 |
-| Resultados | 🔲 | 🔲 | 🔲 |
-| SaaS (planos, limites) | 🔲 | 🔲 | 🔲 |
+| Pedidos | ✅ | ✅ | ✅ |
+| Resultados | ✅ | ✅ | ✅ |
+| Usuários (governança tenant) | ✅ | ✅ | ✅ |
+| Plataforma (laboratórios, usuários globais) | ✅ | ✅ | escopo SUPER_ADMIN |
+| Onboarding lab + admin | ✅ | ✅ | plataforma |
+| Impersonação | ✅ | ✅ | plataforma → tenant |
+| Relatórios | 🔲 | 🔲 | — |
+| Planos + billing | 🔲 | 🔲 | — |
 
-> Atualize esta tabela ao fechar cada módulo. "DoD empresarial" = checklist da skill `/labsystem`.
+> Atualize esta tabela ao fechar cada módulo. Checklist completo: skill `/labsystem` seção 9.
+
+---
+
+## Fluxo de negócio implementado
+
+```
+Cliente → Pedido (N exames) → Resultado (por item) → [Entrega/Cobrança 🔲]
+```
+
+| Etapa | Status | Observação |
+|-------|--------|------------|
+| Cadastro cliente | ✅ | FK obrigatória no pedido |
+| Pedido multi-exame | ✅ | `pedido_itens` |
+| Laudo por exame | ✅ | `resultados` 1:1 com item |
+| Status pedido automático | ✅ | `EM_ANDAMENTO` / `CONCLUIDO` via resultados |
+| Cobrança / entrega | 🔲 | Fase 4+ |
+
+---
 
 ## Infraestrutura
 

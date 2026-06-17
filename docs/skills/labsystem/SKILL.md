@@ -40,22 +40,25 @@ Snapshot sincronizado com o repositório. Atualizar ao fechar cada entrega.
 
 | Área | Implementado |
 |------|----------------|
-| Backend | `src/` na raiz, Spring Boot 3.2, Flyway, `ApiResponse`, exceptions |
+| Backend | `src/` na raiz, Spring Boot 3.2, Flyway (V1–V9), `ApiResponse`, exceptions |
 | **Auth JWT** | `features/auth/`, login/refresh/me, BCrypt, filtro JWT, `@PreAuthorize` |
 | Perfis | `SUPER_ADMIN`, `ADMIN`, `OPERADOR`, `VISUALIZADOR` — seed dev no `DataSeeder` |
-| Módulo **Cliente** | CRUD back + front, RBAC (delete só ADMIN), testes unitários |
-| Frontend `core/` | `auth.service`, interceptors, `authGuard`, `roleGuard` |
-| Login | `/login` — redireciona rotas protegidas |
-| CORS | `localhost:4200` via `CorsConfig` |
-| Actuator | `/actuator/health` público; demais endpoints protegidos |
-| **Design System LS1 Light** | Tema claro hospitalar em `styles.css`; playground `/dev/ui` (ADMIN) |
-| **App Shell** | Sidebar modular + topbar; `core/layout/app-shell/`; menu em `nav.config.ts` |
-| **Toast LS1** | `ToastService` + `app-toast-container` — feedback global sucesso/erro |
-| **TenantContextService** | Lê `empresaId` / `empresaNome` do `/auth/me` após login |
-| **Fundação tenant-ready (Fase 1)** | `empresas`, `empresa_id`, JWT `empresaId`, filtro nos services Cliente/Exame/Usuário |
-| **SUPER_ADMIN (plataforma)** | Escopo plataforma: `/api/v1/platform/**`, front `/plataforma/*` — sem acesso operacional |
-| Módulo **Empresa** (governança) | CRUD laboratórios em `/plataforma/laboratorios` (somente SUPER_ADMIN) |
-| Módulo **Exame** (catálogo) | CRUD back + front em `/exames`, tenant-aware, seed demo, testes unitários |
+| **Multi-tenant por empresa** | `empresa_id` em todas as tabelas de negócio; `TenantContext`; isolamento real por laboratório |
+| **JWT tenant** | Claims `empresaId`, `scope` (`PLATFORM`, `TENANT`, `TENANT_IMPERSONATION`) |
+| **Acesso tenant** | `TenantAccessEvaluator` (back) + `hasTenantAccess()` (front, inclui impersonação) |
+| **SUPER_ADMIN (plataforma)** | `/api/v1/platform/**`, front `/plataforma/*` — laboratórios e usuários globais |
+| **Onboarding laboratório** | `POST /platform/empresas/onboarding` — lab + primeiro ADMIN em um passo |
+| **Impersonação (suporte)** | SUPER_ADMIN entra no laboratório; banner “Modo suporte”; APIs operacionais liberadas |
+| Módulo **Cliente** | CRUD tenant-aware, RBAC, testes |
+| Módulo **Exame** (catálogo) | CRUD tenant-aware em `/exames`, testes |
+| Módulo **Pedido** | Pedido + `pedido_itens` (múltiplos exames), status, FK cliente |
+| Módulo **Resultado** | Laudo por item do pedido; sync de status com pedido (`EM_ANDAMENTO` → `CONCLUIDO`) |
+| Governança tenant | Usuários do laboratório em `/governanca/usuarios` (ADMIN) |
+| Frontend `core/` | `auth.service`, guards (`tenantGuard`, `superAdminGuard`), interceptors |
+| **Design System LS1 Light** | `styles.css`; playground `/dev/ui` |
+| **App Shell** | Sidebar + topbar; menu em `nav.config.ts` |
+| **Toast LS1** | `ToastService` global |
+| **TenantContextService** | `empresaId` / `empresaNome` (ou laboratório impersonado) via `/auth/me` |
 
 **Usuários dev (senha no `DataSeeder`):**
 
@@ -70,10 +73,11 @@ Snapshot sincronizado com o repositório. Atualizar ao fechar cada entrega.
 
 | Área | Pendente |
 |------|----------|
+| **Planos + limites + billing** (Fase 4 — comercial) | 🔲 |
+| Relatórios e exportação | 🔲 |
+| Entrega/cobrança ao paciente | 🔲 |
 | Docker, compose, `.env.example`, `application-prod.yml` | 🔲 |
 | traceId/MDC, logs prod refinados | 🔲 |
-| **SaaS completo** (planos, limites, onboarding multi-empresa) | 🔲 |
-| Módulos Pedidos, Resultados | 🔲 |
 | OpenAPI / Swagger | 🔲 |
 
 ### Referência viva
@@ -101,13 +105,14 @@ Tema **claro hospitalar / laboratório**: fundo branco e azul clínico, cards br
 
 ### Gaps conhecidos (antes do DoD empresarial completo)
 
-- `GlobalExceptionHandler` expõe mensagem interna em 500
+- `GlobalExceptionHandler` ainda expõe mensagem interna em erros 500 genéricos
 - Sem Docker para deploy
 - CORS ainda fixo em dev (`localhost:4200`)
+- Sem enforcement de limites por plano (Fase 4)
 
 ### Próxima entrega recomendada
 
-**Docker/prod** ou **módulo Pedidos** — conforme priorização da seção 3.
+**Docker/prod** ou **relatórios** — conforme priorização da seção 3. **Planos + billing** só após estabilizar deploy.
 
 ---
 
@@ -121,13 +126,15 @@ Cliente → Pedido → Exame(s) → Resultado → Entrega/Cobrança
 
 Ordem sugerida de evolução:
 
-1. Autenticação e perfis
-2. **Fundação tenant-ready** — `empresas`, `empresa_id`, JWT, filtro nos services (seção 6.1)
-3. Cadastros base (clientes, catálogo de exames) — **sempre com `empresa_id`**
-4. Fluxo principal (pedido → resultado)
-5. Relatórios e exportação
-6. Integrações
-7. **SaaS completo** — planos, limites, onboarding (seção 6.1 — Fase 3)
+1. ~~Autenticação e perfis~~ ✅
+2. ~~**Fundação tenant** — `empresa_id`, JWT, isolamento por laboratório~~ ✅
+3. ~~Cadastros base (clientes, exames)~~ ✅
+4. ~~Plataforma SUPER_ADMIN (laboratórios, onboarding, impersonação)~~ ✅
+5. ~~Fluxo principal (pedido → resultado)~~ ✅
+6. Relatórios e exportação
+7. Deploy (Docker/prod)
+8. **Comercial** — planos, limites, billing (seção 6.1 — Fase 4)
+9. Integrações externas
 
 Feature fora desse fluxo exige justificativa explícita.
 
@@ -210,12 +217,13 @@ core/
 ```
 
 - **Novo módulo:** adicionar item em `nav.config.ts` + rota lazy em `app.routes.ts` (children do shell)
-- **Governança:** seção `governanca` — só `ADMIN`; CRUD Empresa em `/governanca/empresas`
+- **Plataforma:** seção `plataforma` — só `SUPER_ADMIN`; laboratórios em `/plataforma/laboratorios`
+- **Governança tenant:** seção `governanca` — só `ADMIN`; usuários em `/governanca/usuarios`
 - **Itens `disabled: true`:** visíveis no menu com badge "Em breve" (roadmap)
 - **Topbar:** empresa + usuário + perfil; **sidebar:** navegação por módulo
 - Login (`/login`) fica **fora** do shell
 
-> **CRUD Empresa (governança)** ≠ **isolamento multi-tenant**. O cadastro de empresas é Fase 2; o filtro de dados por `empresa_id` é Fase 1 (seção 6.1).
+> **Plataforma (cadastro de laboratórios)** ≠ **isolamento multi-tenant**. O cadastro é escopo SUPER_ADMIN; o isolamento operacional é sempre por `empresa_id` do JWT (seção 6).
 
 ---
 
@@ -286,73 +294,104 @@ Obrigatório para produto multi-usuário ou SaaS.
 
 **Perfis iniciais:** `SUPER_ADMIN`, `ADMIN`, `OPERADOR`, `VISUALIZADOR`.
 
-- `SUPER_ADMIN` — dono/operador da plataforma; escopo `/api/v1/platform/**`; sem acesso a clientes/exames (impersonação na Fase 3)
+- `SUPER_ADMIN` — operador da plataforma; escopo `/api/v1/platform/**`; acesso operacional **somente via impersonação**
 - `ADMIN` — gestor do laboratório (tenant); escopo filtrado por `empresa_id` do JWT
+- `OPERADOR` / `VISUALIZADOR` — tenant; leitura/escrita conforme RBAC
 
-- Permissão validada no **backend** (`@PreAuthorize` ou checagem no Service)
+- Permissão validada no **backend** (`@tenantAccess`, `@platformAccess`, `@PreAuthorize`)
 - Frontend esconde ação; backend retorna 403 se sem permissão
 - JWT: login, refresh, `/auth/me`
 - Senha BCrypt; nunca logar nem retornar senha/token
 
-### 6.1 Multi-tenant em fases (padrão oficial)
+### 6.1 Evolução multi-tenant e comercial (padrão oficial)
 
-Não implementar SaaS completo de uma vez. Seguir **três fases** — a Fase 1 deve ser feita **antes** de Pedidos/Resultados e de preferência **antes** de novos módulos de negócio.
+O Labsystem **já opera multi-tenant por laboratório** (`empresa_id`). Isso é **independente** de planos e billing — que entram na **Fase 4**.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  HOJE — Isolamento por empresa (tenant = laboratório)       │
+├─────────────────────────────────────────────────────────────┤
+│  SUPER_ADMIN (plataforma)                                   │
+│       │                                                     │
+│       ├── Laboratório A  ── empresa_id=2  ── clientes,      │
+│       │                                    pedidos, …       │
+│       └── Laboratório B  ── empresa_id=3  ── dados isolados │
+│                                                             │
+│  Cada usuário tenant pertence a UMA empresa (JWT empresaId) │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│  FUTURO — Camada comercial (Fase 4, ainda não implementada)  │
+├─────────────────────────────────────────────────────────────┤
+│  Laboratório A  →  Plano Pro  →  limites + fatura mensal    │
+│  Laboratório B  →  Plano Starter → limites menores          │
+└─────────────────────────────────────────────────────────────┘
+```
 
 | Fase | Nome | O que entrega | Status |
 |------|------|---------------|--------|
-| **1** | **Tenant-ready** | Banco e código prontos para isolamento; operação continua com 1 empresa | ✅ |
-| **2** | **Governança** | CRUD laboratórios (`/plataforma/laboratorios`); usuários globais; SUPER_ADMIN | ✅ |
-| **3** | **SaaS completo** | Planos, limites, onboarding, múltiplos laboratórios em produção | 🔲 |
+| **1** | **Tenant** | `empresas`, `empresa_id`, JWT, `TenantContext`, filtro em todos os services | ✅ |
+| **2** | **Plataforma** | SUPER_ADMIN, CRUD laboratórios, usuários globais, onboarding, impersonação | ✅ |
+| **3** | **Fluxo operacional** | Pedidos (`pedido` + `pedido_itens`), Resultados (laudo por item) | ✅ |
+| **4** | **Comercial** | Planos, limites por recurso, billing/assinatura | 🔲 |
 
-#### Fase 1 — Tenant-ready (fazer agora)
+#### Fase 1 — Tenant (implementado)
 
-Objetivo: **uma empresa no seed**, mas **todo dado de negócio já nasce isolável**.
+**Conceito:** `empresa_id` = identificador do tenant. No dia a dia, tenant = **laboratório** (`tipo = LABORATORIO`). Existe empresa sentinela `PLATAFORMA` para o SUPER_ADMIN.
+
+**Tabelas com `empresa_id` (negócio):** `usuarios`, `clientes`, `exames`, `pedidos`, `resultados`.
+
+**Tabelas filhas** (`pedido_itens`): isolamento via FK ao pedido pai (que tem `empresa_id`). Services **nunca** consultam sem filtro de tenant.
 
 **Backend**
 
-1. Tabela `empresas` (migration Flyway)
-2. Coluna `empresa_id` NOT NULL em `usuarios` (FK → `empresas`)
-3. Coluna `empresa_id` NOT NULL em tabelas de negócio existentes (`clientes`, `exames`, …) — migration retroativa
-4. Claim `empresaId` no JWT (access + refresh)
-5. `UsuarioResponse` e `/auth/me` retornam `empresaId` e `empresaNome`
-6. Helper/resolver de tenant no backend (ex.: `TenantContext` a partir do JWT)
-7. **Todo** Repository/Service de negócio filtra por `empresaId` do token
-8. Seed dev: 1 empresa (`Laboratório Demo`) + usuários vinculados; dados existentes migrados para essa empresa
+1. `TenantContext.requireTenantEmpresaId()` — JWT ou `actingEmpresaId` na impersonação
+2. `TenantAccessEvaluator` — `@tenantAccess.read()`, `.write()`, `.admin()`
+3. Repositories: `findByIdAndEmpresaId`, `findAllByEmpresaId`, etc.
+4. **Nunca** aceitar `empresaId` do body para autorizar
 
 **Frontend**
 
-1. `TenantContextService` lê `empresaId` / `empresaNome` do `/auth/me` (não hardcoded)
-2. App shell (sidebar/topbar) exibe empresa real do login
-3. Novos services **não** enviam `empresaId` no body — o backend resolve pelo JWT
+1. `TenantContextService` via `/auth/me`
+2. `tenantGuard` — bloqueia SUPER_ADMIN fora da impersonação nas rotas operacionais
+3. `hasTenantAccess()` — menu e guards alinhados à impersonação
+4. Services HTTP **não** enviam `empresaId` no payload
 
-**Regras invioláveis**
+#### Fase 2 — Plataforma (implementado)
 
-- Nome da coluna no banco: `empresa_id` (sinônimo conceitual de `tenant_id` neste projeto)
-- **Nunca** confiar em `empresaId` vindo do body ou query para autorizar acesso
-- **Nunca** criar tabela de negócio nova sem `empresa_id`
-- Em dev, 1 empresa é suficiente — não exige UI de troca de tenant
+- API `/api/v1/platform/**` com `PlatformAccessEvaluator`
+- Front `/plataforma/laboratorios`, `/plataforma/usuarios`
+- Onboarding: laboratório + primeiro ADMIN (`/platform/empresas/onboarding`)
+- Impersonação: `scope=TENANT_IMPERSONATION`, banner “Modo suporte”
 
-#### Fase 2 — Governança (CRUD Empresa)
+#### Fase 3 — Fluxo operacional (implementado)
 
-- Módulo `features/empresa/` (back) + `governanca/empresa/` (front)
-- Endpoints `/api/v1/empresas` — somente `ADMIN`
-- Cadastro de novas empresas; vínculo usuário ↔ empresa no módulo Usuários
-- Ainda **sem** seletor de tenant na UI para operador (cada usuário pertence a uma empresa)
+- **Pedido:** múltiplos exames (`pedido_itens`), FK `cliente_id`, status `ABERTO` → `EM_ANDAMENTO` → `CONCLUIDO` / `CANCELADO`
+- **Resultado:** 1:1 com `pedido_item`; auto-provisionado ao criar pedido; liberação sincroniza status do pedido
 
-#### Fase 3 — SaaS completo (quando houver 2º laboratório real)
+#### Fase 4 — Planos + billing (futuro — não implementar sem spec)
 
-- Tabela `planos` com limites e flags de feature
-- Validação de limite no Service:
+Escopo previsto (ainda **sem código**):
+
+- Tabela `planos` (nome, limites: max usuários, clientes, pedidos/mês, flags de módulo)
+- Vínculo `empresas.plano_id` ou tabela `assinaturas`
+- `PlanoService.limiteAtingido(empresaId, recurso)` nos services de criação
+- Billing externo (ex.: gateway de pagamento) — faturas, trial, upgrade/downgrade
+- UI SUPER_ADMIN: gestão de planos; UI tenant: uso vs limite (toast `warning`)
 
 ```java
+// Exemplo futuro — NÃO existe no código hoje
 if (planoService.limiteAtingido(empresaId, "clientes")) {
-    throw new BusinessException("Limite do plano atingido.");
+    throw new BusinessException("Limite do plano atingido. Faça upgrade.");
 }
 ```
 
-- Onboarding de nova empresa, billing, troca de contexto (se aplicável)
+**Regras invioláveis (todas as fases)**
 
-**Resumo:** migrar a **fundação (Fase 1)** cedo é barato hoje e caro depois. **Não** parar o fluxo principal para construir Fase 3 antes da hora.
+- Coluna no banco: `empresa_id` (equivalente a `tenant_id`)
+- Novo módulo de negócio → migration com `empresa_id NOT NULL`
+- Isolamento por JWT, não por parâmetro do cliente
+- Planos/limites **complementam** o tenant — não substituem o filtro por `empresa_id`
 
 ---
 

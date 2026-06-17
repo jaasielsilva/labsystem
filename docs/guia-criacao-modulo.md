@@ -20,6 +20,17 @@ Responda antes de criar qualquer arquivo. Se a resposta for vaga, **não comece*
 
 Feature que não passa nessa triagem **não entra no sprint**.
 
+### Multi-tenant (estado atual)
+
+O Labsystem **já é multi-tenant por laboratório** (`empresa_id` = tenant). Todo módulo de negócio deve:
+
+- Ter coluna `empresa_id NOT NULL` na migration
+- Filtrar queries pelo `empresaId` do JWT (`TenantContext.requireTenantEmpresaId()`)
+- Usar `@tenantAccess.read()` / `.write()` / `.admin()` no controller (não só `hasRole`)
+- **Nunca** aceitar `empresaId` no body ou query para autorizar
+
+> **Planos + billing** (limites, assinatura) são **Fase 4** — camada comercial futura, ortogonal ao isolamento por `empresa_id`. Ver `docs/ARQUITETURA.md` e skill `/labsystem` seção 6.1.
+
 ---
 
 ## 1. Ordem de Execução
@@ -104,6 +115,10 @@ public class [Modulo] {
     @Column(nullable = false, length = 150)
     private String nome;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "empresa_id", nullable = false)
+    private Empresa empresa;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean ativo = true;
@@ -134,17 +149,19 @@ public class [Modulo] {
 ```sql
 CREATE TABLE [modulos] (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    empresa_id BIGINT        NOT NULL,
     nome       VARCHAR(150)  NOT NULL,
     ativo      BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP     NULL ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_[modulos]_empresa FOREIGN KEY (empresa_id) REFERENCES empresas(id)
 );
 
--- Índice para busca por nome (searchByTerm usa LIKE '%term%')
+CREATE INDEX idx_[modulos]_empresa_id ON [modulos](empresa_id);
 CREATE INDEX idx_[modulos]_nome ON [modulos](nome);
 ```
 
-> **Regras de migration:** tabelas em `snake_case` plural; toda tabela tem `id`, `created_at`, `updated_at`; nunca alterar banco manualmente; `ddl-auto: validate` em produção.
+> **Regras de migration:** tabelas em `snake_case` plural; toda tabela de **negócio** tem `empresa_id`, `id`, `created_at`, `updated_at`; nunca alterar banco manualmente; `ddl-auto: validate` em produção.
 
 ### 2.4 DTOs
 
@@ -222,11 +239,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface [Modulo]Repository extends JpaRepository<[Modulo], Long> {
 
+    Page<[Modulo]> findAllByEmpresaId(Long empresaId, Pageable pageable);
+
+    Optional<[Modulo]> findByIdAndEmpresaId(Long id, Long empresaId);
+
     @Query("""
             SELECT e FROM [Modulo] e
-            WHERE LOWER(e.nome) LIKE LOWER(CONCAT('%', :term, '%'))
+            WHERE e.empresa.id = :empresaId
+              AND LOWER(e.nome) LIKE LOWER(CONCAT('%', :term, '%'))
             """)
-    Page<[Modulo]> searchByTerm(@Param("term") String term, Pageable pageable);
+    Page<[Modulo]> searchByTermAndEmpresaId(
+            @Param("empresaId") Long empresaId,
+            @Param("term") String term,
+            Pageable pageable);
 }
 ```
 
@@ -256,7 +281,10 @@ public interface [Modulo]Service {
 ```java
 package com.jaasielsilva.labsystem.features.[modulo].service.impl;
 
+import com.jaasielsilva.labsystem.common.TenantContext;
 import com.jaasielsilva.labsystem.exception.ResourceNotFoundException;
+import com.jaasielsilva.labsystem.features.empresa.entity.Empresa;
+import com.jaasielsilva.labsystem.features.empresa.repository.EmpresaRepository;
 import com.jaasielsilva.labsystem.features.[modulo].dto.[Modulo]Request;
 import com.jaasielsilva.labsystem.features.[modulo].dto.[Modulo]Response;
 import com.jaasielsilva.labsystem.features.[modulo].entity.[Modulo];
@@ -277,37 +305,46 @@ public class [Modulo]ServiceImpl implements [Modulo]Service {
 
     private final [Modulo]Repository repository;
     private final [Modulo]Mapper mapper;
+    private final TenantContext tenantContext;
+    private final EmpresaRepository empresaRepository;
 
     @Override
     @Transactional(readOnly = true)
     public Page<[Modulo]Response> findAll(Pageable pageable, String search) {
+        Long empresaId = tenantContext.requireTenantEmpresaId();
         if (search == null || search.isBlank()) {
-            log.info("Buscando [modulos] paginados");
-            return repository.findAll(pageable).map(mapper::toResponse);
+            log.info("Buscando [modulos] paginados empresaId={}", empresaId);
+            return repository.findAllByEmpresaId(empresaId, pageable).map(mapper::toResponse);
         }
-        log.info("Buscando [modulos] com filtro: {}", search.trim());
-        return repository.searchByTerm(search.trim(), pageable).map(mapper::toResponse);
+        log.info("Buscando [modulos] com filtro empresaId={}", empresaId);
+        return repository.searchByTermAndEmpresaId(empresaId, search.trim(), pageable).map(mapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public [Modulo]Response findById(Long id) {
-        log.info("Buscando [modulo] id={}", id);
-        return mapper.toResponse(findOrThrow(id));
+        Long empresaId = tenantContext.requireTenantEmpresaId();
+        log.info("Buscando [modulo] id={} empresaId={}", id, empresaId);
+        return mapper.toResponse(findOrThrow(id, empresaId));
     }
 
     @Override
     @Transactional
     public [Modulo]Response create([Modulo]Request request) {
-        log.info("Criando [modulo]: {}", request.nome());
-        return mapper.toResponse(repository.save(mapper.toEntity(request)));
+        Long empresaId = tenantContext.requireTenantEmpresaId();
+        log.info("Criando [modulo] empresaId={}", empresaId);
+        [Modulo] entity = mapper.toEntity(request);
+        Empresa empresa = empresaRepository.getReferenceById(empresaId);
+        entity.setEmpresa(empresa);
+        return mapper.toResponse(repository.save(entity));
     }
 
     @Override
     @Transactional
     public [Modulo]Response update(Long id, [Modulo]Request request) {
-        log.info("Atualizando [modulo] id={}", id);
-        [Modulo] entity = findOrThrow(id);
+        Long empresaId = tenantContext.requireTenantEmpresaId();
+        log.info("Atualizando [modulo] id={} empresaId={}", id, empresaId);
+        [Modulo] entity = findOrThrow(id, empresaId);
         mapper.updateEntity(request, entity);
         return mapper.toResponse(repository.save(entity));
     }
@@ -315,14 +352,15 @@ public class [Modulo]ServiceImpl implements [Modulo]Service {
     @Override
     @Transactional
     public void delete(Long id) {
-        log.info("Deletando [modulo] id={}", id);
-        repository.delete(findOrThrow(id));
+        Long empresaId = tenantContext.requireTenantEmpresaId();
+        log.info("Deletando [modulo] id={} empresaId={}", id, empresaId);
+        repository.delete(findOrThrow(id, empresaId));
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
 
-    private [Modulo] findOrThrow(Long id) {
-        return repository.findById(id)
+    private [Modulo] findOrThrow(Long id, Long empresaId) {
+        return repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "[Modulo] não encontrado com ID: " + id));
     }
@@ -357,7 +395,7 @@ public class [Modulo]Controller {
     private final [Modulo]Service service;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("@tenantAccess.read()")
     public ResponseEntity<ApiResponse<Page<[Modulo]Response>>> getAll(
             @RequestParam(defaultValue = "0")    int page,
             @RequestParam(defaultValue = "10")   int size,
@@ -374,13 +412,13 @@ public class [Modulo]Controller {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR', 'VISUALIZADOR')")
+    @PreAuthorize("@tenantAccess.read()")
     public ResponseEntity<ApiResponse<[Modulo]Response>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.ok(service.findById(id)));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("@tenantAccess.write()")
     public ResponseEntity<ApiResponse<[Modulo]Response>> create(
             @Valid @RequestBody [Modulo]Request request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -388,7 +426,7 @@ public class [Modulo]Controller {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OPERADOR')")
+    @PreAuthorize("@tenantAccess.write()")
     public ResponseEntity<ApiResponse<[Modulo]Response>> update(
             @PathVariable Long id,
             @Valid @RequestBody [Modulo]Request request) {
@@ -397,7 +435,7 @@ public class [Modulo]Controller {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("@tenantAccess.admin()")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.ok("[Modulo] removido com sucesso", null));
@@ -1006,16 +1044,17 @@ export const [MODULO]_ROUTES: Routes = [
 
 ## 4. Padrões de Referência Rápida
 
-### Segurança (RBAC)
+### Segurança (RBAC + tenant)
 
-| Operação | Roles permitidas |
-|---|---|
-| Listar / Visualizar | ADMIN, OPERADOR, VISUALIZADOR |
-| Criar / Editar | ADMIN, OPERADOR |
-| Deletar | ADMIN |
+| Operação | Backend | Roles (tenant) |
+|---|---|---|
+| Listar / Visualizar | `@tenantAccess.read()` | ADMIN, OPERADOR, VISUALIZADOR (+ SUPER_ADMIN em impersonação) |
+| Criar / Editar | `@tenantAccess.write()` | ADMIN, OPERADOR |
+| Deletar | `@tenantAccess.admin()` | ADMIN |
 
-- Permissão validada **sempre no backend** com `@PreAuthorize`
-- Frontend esconde o botão; backend rejeita com 403 se burlar
+- Permissão validada **sempre no backend** — `@tenantAccess` considera impersonação
+- Frontend: `auth.canEdit()` / `canDelete()` e `hasTenantAccess()` no menu
+- Backend rejeita com 403 se burlar; isolamento por `empresa_id` do JWT, nunca do body
 
 ### Exceções
 
@@ -1065,7 +1104,8 @@ Só marque o módulo como pronto quando **todos** os itens estiverem ✅.
 - [ ] Textos em português, sem jargão técnico
 
 ### Segurança
-- [ ] `@PreAuthorize` em todos os endpoints
+- [ ] `@tenantAccess` em todos os endpoints de negócio
+- [ ] Queries filtradas por `empresa_id` do JWT (`TenantContext`)
 - [ ] Frontend esconde ações sem permissão
 - [ ] Nenhum secret hardcoded
 
@@ -1086,3 +1126,6 @@ Só marque o módulo como pronto quando **todos** os itens estiverem ✅.
 - `ddl-auto: create` ou `update` em produção
 - Emojis em ícones de ação (use SVG)
 - Começar a codar sem responder a seção 0
+- Módulo de negócio sem `empresa_id` na migration
+- Query sem filtro por `empresa_id`
+- Aceitar `empresaId` do body do cliente para decidir tenant
