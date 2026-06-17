@@ -18,6 +18,7 @@
 
 .form-card {
   position: relative;
+  overflow: hidden;
   padding: 24px;
 }
 

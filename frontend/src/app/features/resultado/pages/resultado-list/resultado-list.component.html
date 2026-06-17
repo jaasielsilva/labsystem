@@ -17,7 +17,6 @@
           placeholder="Buscar por cliente, exame ou CPF..."
           (input)="onSearchInput($event)"
         />
-        <button type="button" class="search-clear" *ngIf="hasActiveSearch" (click)="clearSearch()">×</button>
       </div>
       <span class="table-toolbar-meta">
         @if (loading()) { Carregando... }

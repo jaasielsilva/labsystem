@@ -22,7 +22,6 @@
           (input)="onSearchInput($event)"
           aria-label="Buscar pedidos"
         />
-        <button type="button" class="search-clear" *ngIf="hasActiveSearch" (click)="clearSearch()" aria-label="Limpar busca">×</button>
       </div>
 
       <div class="table-toolbar-end">
@@ -84,8 +83,14 @@
           </td>
         </tr>
 
-        <tr *ngFor="let _ of fillerRows" class="row-filler">
-          <td colspan="7"><span class="filler-spacer">—</span></td>
+        <tr *ngFor="let _ of fillerRows" class="row-filler" aria-hidden="true">
+          <td class="cell-mono filler-spacer">&nbsp;</td>
+          <td><span class="cell-name filler-spacer">&nbsp;</span></td>
+          <td class="cell-muted filler-spacer">&nbsp;</td>
+          <td class="col-hide-md cell-mono filler-spacer">&nbsp;</td>
+          <td class="cell-mono filler-spacer">&nbsp;</td>
+          <td><span class="badge filler-spacer">&nbsp;</span></td>
+          <td><span class="filler-spacer action-spacer">&nbsp;</span></td>
         </tr>
 
         <tr *ngIf="pedidos.length === 0 && !loading()">
@@ -103,7 +108,7 @@
       </tbody>
     </table>
 
-    <footer class="table-footer" *ngIf="totalPages > 1">
+    <footer class="table-footer" *ngIf="totalElements > 0">
       <span class="pagination-info">Página {{ currentPage + 1 }} de {{ totalPages }}</span>
       <div class="pagination-controls">
         <button class="btn btn-secondary btn-sm" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0">Anterior</button>

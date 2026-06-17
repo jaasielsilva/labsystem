@@ -95,6 +95,21 @@
 .yes-btn { background: var(--color-danger); color: white; }
 .no-btn { background: #fff; border: 1px solid #e2e8f0; }
 .empty-state { padding: 32px 16px; text-align: center; }
+
+.premium-table.dense tbody tr.row-filler:hover {
+  background: transparent;
+}
+
+.filler-spacer {
+  visibility: hidden;
+}
+
+.action-spacer {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+}
+
 .table-footer { padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
 .loader-content { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .spinner-sm-table { width: 28px; height: 28px; border-width: 2px; }

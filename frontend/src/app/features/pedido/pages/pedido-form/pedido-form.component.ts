@@ -1,8 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { Subject, finalize, forkJoin, takeUntil, timeout } from 'rxjs';
 
 import { PedidoService } from '../../services/pedido.service';
 import { ClienteService } from '../../../cliente/services/cliente.service';
@@ -20,7 +20,7 @@ import { ToastService } from '../../../../core/services/toast.service';
   templateUrl: './pedido-form.component.html',
   styleUrls: ['./pedido-form.component.css']
 })
-export class PedidoFormComponent implements OnInit {
+export class PedidoFormComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private pedidoService = inject(PedidoService);
   private clienteService = inject(ClienteService);
@@ -30,10 +30,14 @@ export class PedidoFormComponent implements OnInit {
   private route = inject(ActivatedRoute);
   protected auth = inject(AuthService);
 
+  private readonly destroy$ = new Subject<void>();
+
   pedidoForm!: FormGroup;
   isEditMode = false;
   pedidoId?: number;
   loading = false;
+  lookupsLoading = signal(false);
+  lookupsError = signal(false);
   saving = false;
   actionLoading = false;
 
@@ -53,6 +57,11 @@ export class PedidoFormComponent implements OnInit {
     this.checkEditMode();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private initForm(): void {
     this.pedidoForm = this.fb.group({
       clienteId: [null as number | null, [Validators.required]],
@@ -61,23 +70,44 @@ export class PedidoFormComponent implements OnInit {
   }
 
   private loadLookups(): void {
-    this.clienteService.getAll(0, 200, 'nome', 'asc').subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.clientes = (response.data.content ?? []).filter((c: Cliente) => c.ativo !== false);
-        }
-      },
-      error: () => this.toast.error('Erro ao carregar clientes.')
-    });
+    this.lookupsLoading.set(true);
+    this.lookupsError.set(false);
 
-    this.exameService.getAll(0, 200, 'nome', 'asc').subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.examesDisponiveis = (response.data.content ?? []).filter((e: Exame) => e.ativo !== false);
+    forkJoin({
+      clientes: this.clienteService.getAll(0, 200, 'nome', 'asc'),
+      exames: this.exameService.getAll(0, 200, 'nome', 'asc')
+    })
+      .pipe(
+        timeout(15000),
+        takeUntil(this.destroy$),
+        finalize(() => this.lookupsLoading.set(false))
+      )
+      .subscribe({
+        next: ({ clientes, exames }) => {
+          if (clientes.success && clientes.data) {
+            this.clientes = (clientes.data.content ?? []).filter((c: Cliente) => c.ativo !== false);
+          } else {
+            this.toast.error(clientes.message || 'Erro ao carregar clientes.');
+            this.lookupsError.set(true);
+          }
+
+          if (exames.success && exames.data) {
+            this.examesDisponiveis = (exames.data.content ?? []).filter((e: Exame) => e.ativo !== false);
+          } else {
+            this.toast.error(exames.message || 'Erro ao carregar exames.');
+            this.lookupsError.set(true);
+          }
+        },
+        error: (err) => {
+          this.lookupsError.set(true);
+          const isTimeout = err?.name === 'TimeoutError';
+          this.toast.error(
+            isTimeout
+              ? 'Tempo esgotado ao carregar clientes e exames. Verifique se o backend está rodando.'
+              : (err.error?.message || 'Erro ao carregar dados do formulário.')
+          );
         }
-      },
-      error: () => this.toast.error('Erro ao carregar exames.')
-    });
+      });
   }
 
   private checkEditMode(): void {

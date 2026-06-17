@@ -8,10 +8,11 @@
   </header>
 
   <div class="glass-card form-card">
-    <div class="loader-overlay" *ngIf="loading">
+    <div class="loader-overlay" *ngIf="loading || lookupsLoading()">
       <div class="loader-content">
         <div class="spinner spinner-sm-table"></div>
-        <p class="loader-label">Carregando pedido...</p>
+        <p class="loader-label" *ngIf="loading">Carregando pedido...</p>
+        <p class="loader-label" *ngIf="!loading && lookupsLoading()">Carregando clientes e exames...</p>
       </div>
     </div>
 
@@ -23,11 +24,19 @@
       </p>
     </div>
 
-    <form [formGroup]="pedidoForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+    <form [formGroup]="pedidoForm" (ngSubmit)="onSubmit()" *ngIf="!loading && !lookupsLoading()">
       <div class="form-group">
         <label for="clienteId" class="form-label">Cliente *</label>
-        <select id="clienteId" formControlName="clienteId" class="form-control" [class.is-invalid]="f['clienteId'].touched && f['clienteId'].invalid">
-          <option [ngValue]="null" disabled>Selecione o cliente...</option>
+        <select
+          id="clienteId"
+          formControlName="clienteId"
+          class="form-control"
+          [class.is-invalid]="f['clienteId'].touched && f['clienteId'].invalid"
+          [disabled]="lookupsError()"
+        >
+          <option [ngValue]="null" disabled>
+            {{ lookupsError() ? 'Erro ao carregar — recarregue a página' : (clientes.length === 0 ? 'Nenhum cliente cadastrado' : 'Selecione o cliente...') }}
+          </option>
           <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nome }}</option>
         </select>
         <div class="invalid-feedback" *ngIf="f['clienteId'].touched && f['clienteId'].invalid">

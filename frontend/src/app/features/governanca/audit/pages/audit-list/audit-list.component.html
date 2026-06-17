@@ -20,10 +20,6 @@
         <input #searchInput type="search" class="form-control table-search-input"
           placeholder="Buscar por usuário, ação ou entidade..." (input)="onSearchInput($event)"
           aria-label="Buscar registros de auditoria" />
-        <button type="button" class="search-clear" *ngIf="hasActiveSearch" (click)="clearSearch()"
-          aria-label="Limpar busca">
-          ×
-        </button>
       </div>
 
       <div class="table-toolbar-end">

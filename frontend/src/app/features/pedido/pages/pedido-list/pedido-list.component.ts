@@ -212,4 +212,13 @@ export class PedidoListComponent implements OnInit, OnDestroy {
   canDeletePedido(status: PedidoStatus): boolean {
     return status === 'ABERTO' && this.auth.canDelete();
   }
+  private readonly sortLabels: Record<string, string> = {
+    id: 'número',
+    dataPedido: 'data',
+    status: 'status'
+  };
+
+  get sortLabel(): string {
+    return this.sortLabels[this.sortBy] ?? this.sortBy;
+  }
 }
