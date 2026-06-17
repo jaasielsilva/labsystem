@@ -1,0 +1,48 @@
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+    <a routerLink="/resultados" class="back-link">← Voltar</a>
+    <h1 class="page-title-sm">Resultado do exame</h1>
+    <p class="page-subtitle" *ngIf="resultado">
+      Pedido #{{ resultado.pedidoId }} · {{ resultado.clienteNome }} · {{ resultado.exameCodigo }} — {{ resultado.exameNome }}
+    </p>
+  </header>
+
+  <div class="glass-card form-card">
+    <div class="loader-overlay" *ngIf="loading">
+      <div class="spinner spinner-sm-table"></div>
+    </div>
+
+    <div class="status-banner" *ngIf="resultado">
+      <span class="badge" [ngClass]="statusClass(resultado.status)">{{ statusLabel(resultado.status) }}</span>
+      <span class="meta" *ngIf="resultado.dataLiberacao">Liberado em {{ resultado.dataLiberacao | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+
+    <form [formGroup]="form" *ngIf="!loading && resultado">
+      <div class="form-group">
+        <label for="observacaoInterna" class="form-label">Observação interna</label>
+        <textarea id="observacaoInterna" formControlName="observacaoInterna" class="form-control" rows="2" placeholder="Anotações da equipe técnica"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="laudo" class="form-label">Laudo *</label>
+        <textarea id="laudo" formControlName="laudo" class="form-control laudo-field" rows="10" placeholder="Descreva o resultado do exame..."></textarea>
+      </div>
+
+      <footer class="form-actions">
+        <button type="button" class="btn btn-secondary" routerLink="/resultados" [disabled]="saving || actionLoading">Voltar</button>
+
+        <div class="action-group" *ngIf="isEditable">
+          <button type="button" class="btn btn-secondary btn-sm" *ngIf="canIniciarAnalise" (click)="iniciarAnalise()" [disabled]="actionLoading || saving">
+            Iniciar análise
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="salvarRascunho()" [disabled]="actionLoading || saving">
+            {{ saving ? 'Salvando...' : 'Salvar rascunho' }}
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" *ngIf="canLiberar" (click)="liberar()" [disabled]="actionLoading || saving">
+            {{ actionLoading ? 'Processando...' : 'Liberar resultado' }}
+          </button>
+        </div>
+      </footer>
+    </form>
+  </div>
+</div>

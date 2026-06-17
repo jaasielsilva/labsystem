@@ -1,0 +1,110 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <div class="title-group">
+      <h1 class="page-title-sm">Pedidos</h1>
+      <p class="page-subtitle">Solicitações de exames por cliente</p>
+    </div>
+
+    <button class="btn btn-primary btn-sm" routerLink="/pedidos/novo" *ngIf="auth.canEdit()">
+      Novo pedido
+    </button>
+  </header>
+
+  <div class="glass-card table-wrapper">
+    <div class="table-toolbar">
+      <div class="table-search">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input
+          #searchInput
+          type="search"
+          class="form-control table-search-input"
+          placeholder="Buscar por cliente ou CPF..."
+          (input)="onSearchInput($event)"
+          aria-label="Buscar pedidos"
+        />
+        <button type="button" class="search-clear" *ngIf="hasActiveSearch" (click)="clearSearch()" aria-label="Limpar busca">×</button>
+      </div>
+
+      <div class="table-toolbar-end">
+        <span class="table-toolbar-meta">
+          @if (loading()) { Carregando... }
+          @else if (totalElements === 0) { Nenhum registro }
+          @else { {{ totalElements }} {{ totalElements === 1 ? 'pedido' : 'pedidos' }} }
+        </span>
+      </div>
+    </div>
+
+    <div class="loader-overlay" *ngIf="loading() || editingLoading()">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+      </div>
+    </div>
+
+    <table class="premium-table dense">
+      <thead>
+        <tr>
+          <th (click)="setSort('id')" class="sortable"># <span class="sort-icon" *ngIf="sortBy === 'id'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span></th>
+          <th>Cliente</th>
+          <th (click)="setSort('dataPedido')" class="sortable">Data <span class="sort-icon" *ngIf="sortBy === 'dataPedido'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span></th>
+          <th class="col-hide-md">Itens</th>
+          <th>Total</th>
+          <th (click)="setSort('status')" class="sortable">Status <span class="sort-icon" *ngIf="sortBy === 'status'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span></th>
+          <th class="actions-header">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of pedidos">
+          <td class="cell-mono">#{{ p.id }}</td>
+          <td class="cell-name">{{ p.clienteNome }}</td>
+          <td class="cell-muted">{{ formatDate(p.dataPedido) }}</td>
+          <td class="col-hide-md cell-mono">{{ p.quantidadeItens }}</td>
+          <td class="cell-mono">{{ formatCurrency(p.valorTotal) }}</td>
+          <td><span class="badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
+          <td>
+            <div class="action-buttons" *ngIf="confirmDeleteId !== p.id">
+              <button type="button" class="action-btn edit-btn" (click)="onView(p.id)" title="Abrir pedido" aria-label="Abrir pedido">✎</button>
+              <button
+                type="button"
+                class="action-btn delete-btn"
+                *ngIf="canDeletePedido(p.status)"
+                (click)="askDelete(p.id)"
+                title="Excluir"
+                aria-label="Excluir"
+              >🗑</button>
+            </div>
+            <div class="confirm-delete-actions" *ngIf="confirmDeleteId === p.id">
+              <span class="confirm-text">Excluir?</span>
+              <button type="button" class="confirm-btn yes-btn" (click)="deletePedido(p.id)">Sim</button>
+              <button type="button" class="confirm-btn no-btn" (click)="cancelDelete()">Não</button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngFor="let _ of fillerRows" class="row-filler">
+          <td colspan="7"><span class="filler-spacer">—</span></td>
+        </tr>
+
+        <tr *ngIf="pedidos.length === 0 && !loading()">
+          <td colspan="7">
+            <div class="empty-state">
+              @if (hasActiveSearch) {
+                <p>Nenhum pedido encontrado.</p>
+              } @else {
+                <p>Nenhum pedido cadastrado.</p>
+                <a *ngIf="auth.canEdit()" routerLink="/pedidos/novo" class="empty-cta">Cadastrar primeiro pedido</a>
+              }
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer class="table-footer" *ngIf="totalPages > 1">
+      <span class="pagination-info">Página {{ currentPage + 1 }} de {{ totalPages }}</span>
+      <div class="pagination-controls">
+        <button class="btn btn-secondary btn-sm" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0">Anterior</button>
+        <button class="btn btn-secondary btn-sm" (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Próxima</button>
+      </div>
+    </footer>
+  </div>
+</div>

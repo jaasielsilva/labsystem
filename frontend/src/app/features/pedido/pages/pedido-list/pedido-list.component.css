@@ -1,0 +1,87 @@
+.table-wrapper {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.table-search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.table-search-input {
+  padding: 8px 32px 8px 34px;
+  font-size: 0.8125rem;
+  min-height: 36px;
+}
+
+.search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.table-toolbar-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.premium-table th.sortable {
+  cursor: pointer;
+}
+
+.cell-name { font-weight: 600; }
+.cell-mono { font-variant-numeric: tabular-nums; }
+.cell-muted { color: var(--text-secondary); }
+.actions-header { text-align: right; width: 88px; }
+.premium-table td:last-child { text-align: right; }
+.action-buttons { display: inline-flex; gap: 4px; justify-content: flex-end; }
+.action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+.confirm-delete-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 3px 6px;
+  border-radius: 6px;
+}
+.confirm-text { font-size: 0.75rem; font-weight: 600; color: var(--color-danger); }
+.confirm-btn { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; border: none; cursor: pointer; }
+.yes-btn { background: var(--color-danger); color: white; }
+.no-btn { background: #fff; border: 1px solid #e2e8f0; }
+.empty-state { padding: 32px 16px; text-align: center; }
+.table-footer { padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+.loader-content { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.spinner-sm-table { width: 28px; height: 28px; border-width: 2px; }
+.col-hide-md { }
+@media (max-width: 768px) {
+  .col-hide-md { display: none; }
+}

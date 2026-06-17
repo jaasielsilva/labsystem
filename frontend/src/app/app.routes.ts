@@ -32,6 +32,18 @@ export const routes: Routes = [
       },
 
       {
+        path: 'pedidos',
+        canActivate: [tenantGuard],
+        loadChildren: () => import('./features/pedido/pedido.routes').then(m => m.PEDIDO_ROUTES)
+      },
+
+      {
+        path: 'resultados',
+        canActivate: [tenantGuard],
+        loadChildren: () => import('./features/resultado/resultado.routes').then(m => m.RESULTADO_ROUTES)
+      },
+
+      {
         path: 'dev/ui',
         canActivate: [roleGuard('ADMIN', 'SUPER_ADMIN')],
         loadComponent: () => import('./features/dev/ui-playground/ui-playground.component').then(m => m.UiPlaygroundComponent)

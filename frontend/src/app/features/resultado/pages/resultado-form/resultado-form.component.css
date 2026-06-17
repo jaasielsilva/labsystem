@@ -1,0 +1,12 @@
+.form-page { max-width: 900px; }
+.form-card { padding: 24px; position: relative; }
+.status-banner { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+.meta { font-size: 0.8125rem; color: var(--text-secondary); }
+.laudo-field { min-height: 220px; font-family: inherit; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+.action-group { display: flex; gap: 8px; margin-right: auto; flex-wrap: wrap; }
+.back-link { display: inline-block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.8125rem; font-weight: 600; }
+@media (max-width: 650px) {
+  .form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .action-group { margin-right: 0; flex-direction: column; }
+}

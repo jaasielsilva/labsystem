@@ -1,0 +1,114 @@
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+    <a routerLink="/pedidos" class="back-link">← Voltar</a>
+    <h1 class="page-title-sm">{{ isEditMode ? 'Pedido #' + pedidoId : 'Novo pedido' }}</h1>
+    <p class="page-subtitle">
+      {{ isEditMode ? 'Visualize ou atualize a solicitação de exames.' : 'Selecione o cliente e os exames solicitados.' }}
+    </p>
+  </header>
+
+  <div class="glass-card form-card">
+    <div class="loader-overlay" *ngIf="loading">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando pedido...</p>
+      </div>
+    </div>
+
+    <div class="status-banner" *ngIf="isEditMode && status">
+      <span class="badge" [ngClass]="statusClass(status)">{{ statusLabel(status) }}</span>
+      <span class="status-meta" *ngIf="dataPedido">Criado em {{ dataPedido | date:'dd/MM/yyyy HH:mm' }}</span>
+      <p class="cancel-reason" *ngIf="status === 'CANCELADO' && motivoCancelamento">
+        Motivo: {{ motivoCancelamento }}
+      </p>
+    </div>
+
+    <form [formGroup]="pedidoForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+      <div class="form-group">
+        <label for="clienteId" class="form-label">Cliente *</label>
+        <select id="clienteId" formControlName="clienteId" class="form-control" [class.is-invalid]="f['clienteId'].touched && f['clienteId'].invalid">
+          <option [ngValue]="null" disabled>Selecione o cliente...</option>
+          <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nome }}</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="f['clienteId'].touched && f['clienteId'].invalid">
+          Selecione o cliente.
+        </div>
+      </div>
+
+      <section class="form-section">
+        <div class="form-section-header">
+          <h2 class="form-section-title">Exames do pedido</h2>
+          <p class="form-section-hint">Adicione um ou mais exames do catálogo.</p>
+        </div>
+
+        <div class="exam-add-row" *ngIf="isEditable">
+          <select class="form-control" [(ngModel)]="exameParaAdicionar" [ngModelOptions]="{standalone: true}">
+            <option [ngValue]="null">Selecione um exame...</option>
+            <option *ngFor="let e of examesParaSelect" [ngValue]="e.id">{{ e.codigo }} — {{ e.nome }}</option>
+          </select>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="adicionarExame()" [disabled]="!exameParaAdicionar">
+            Adicionar
+          </button>
+        </div>
+
+        <div class="items-empty" *ngIf="itensSelecionados.length === 0">
+          Nenhum exame adicionado.
+        </div>
+
+        <table class="items-table" *ngIf="itensSelecionados.length > 0">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Exame</th>
+              <th>Valor</th>
+              <th *ngIf="isEditable"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of itensSelecionados; let i = index">
+              <td>{{ item.exameCodigo }}</td>
+              <td>{{ item.exameNome }}</td>
+              <td>{{ formatCurrency(item.valorUnitario) }}</td>
+              <td *ngIf="isEditable">
+                <button type="button" class="btn-link danger-link" (click)="removerExame(i)">Remover</button>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2"><strong>Total</strong></td>
+              <td colspan="2"><strong>{{ formatCurrency(totalPedido) }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <div class="form-group">
+        <label for="observacao" class="form-label">Observações</label>
+        <textarea id="observacao" formControlName="observacao" class="form-control" rows="3" placeholder="Ex.: Coleta em jejum, prioridade..."></textarea>
+      </div>
+
+      <footer class="form-actions">
+        <button type="button" class="btn btn-secondary" routerLink="/pedidos" [disabled]="saving || actionLoading">Voltar</button>
+
+        <div class="action-group" *ngIf="canManageStatus">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="cancelarPedido()" [disabled]="actionLoading || saving">
+            Cancelar pedido
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="concluirPedido()" [disabled]="actionLoading || saving">
+            Concluir
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary btn-sm"
+          *ngIf="isEditable"
+          [disabled]="pedidoForm.invalid || saving || actionLoading || itensSelecionados.length === 0"
+        >
+          {{ saving ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Criar pedido') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

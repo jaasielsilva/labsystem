@@ -1,0 +1,75 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <div class="title-group">
+      <h1 class="page-title-sm">Resultados</h1>
+      <p class="page-subtitle">Laudos por exame do pedido</p>
+    </div>
+  </header>
+
+  <div class="glass-card table-wrapper">
+    <div class="table-toolbar">
+      <div class="table-search">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input
+          #searchInput
+          type="search"
+          class="form-control table-search-input"
+          placeholder="Buscar por cliente, exame ou CPF..."
+          (input)="onSearchInput($event)"
+        />
+        <button type="button" class="search-clear" *ngIf="hasActiveSearch" (click)="clearSearch()">×</button>
+      </div>
+      <span class="table-toolbar-meta">
+        @if (loading()) { Carregando... }
+        @else { {{ totalElements }} {{ totalElements === 1 ? 'resultado' : 'resultados' }} }
+      </span>
+    </div>
+
+    <div class="loader-overlay" *ngIf="loading()">
+      <div class="spinner spinner-sm-table"></div>
+    </div>
+
+    <table class="premium-table dense">
+      <thead>
+        <tr>
+          <th>Pedido</th>
+          <th>Cliente</th>
+          <th>Exame</th>
+          <th class="col-hide-md">Data pedido</th>
+          <th>Status</th>
+          <th class="col-hide-md">Liberado em</th>
+          <th class="actions-header">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of resultados">
+          <td class="cell-mono">#{{ r.pedidoId }}</td>
+          <td class="cell-name">{{ r.clienteNome }}</td>
+          <td>{{ r.exameCodigo }} — {{ r.exameNome }}</td>
+          <td class="col-hide-md cell-muted">{{ formatDate(r.dataPedido) }}</td>
+          <td><span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabel(r.status) }}</span></td>
+          <td class="col-hide-md cell-muted">{{ formatDate(r.dataLiberacao) }}</td>
+          <td>
+            <button type="button" class="action-btn edit-btn" (click)="openResultado(r.id)" title="Abrir">✎</button>
+          </td>
+        </tr>
+        <tr *ngIf="resultados.length === 0 && !loading()">
+          <td colspan="7">
+            <div class="empty-state">
+              <p>Nenhum resultado encontrado.</p>
+              <p class="empty-hint">Os resultados são criados automaticamente ao cadastrar um pedido.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer class="table-footer" *ngIf="totalPages > 1">
+      <span>Página {{ currentPage + 1 }} de {{ totalPages }}</span>
+      <div class="pagination-controls">
+        <button class="btn btn-secondary btn-sm" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0">Anterior</button>
+        <button class="btn btn-secondary btn-sm" (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">Próxima</button>
+      </div>
+    </footer>
+  </div>
+</div>
