@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil, timeout } from 'rxjs';
 import { AuditService } from '../../services/audit.service';
 import { AuditLog } from '../../models/audit.model';
@@ -9,7 +10,7 @@ import { AuthService } from '../../../../../core/services/auth.service';
 @Component({
   selector: 'app-audit-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './audit-list.component.html',
   styleUrls: ['./audit-list.component.css']
 })
@@ -37,6 +38,17 @@ export class AuditListComponent implements OnInit, OnDestroy {
   searchQuery = '';
 
   loading = signal(false);
+
+  private readonly sortLabels: Record<string, string> = {
+    createdAt: 'data',
+    usuarioEmail: 'usuário',
+    action: 'ação',
+    entidade: 'entidade'
+  };
+
+  get sortLabel(): string {
+    return this.sortLabels[this.sortBy] ?? this.sortBy;
+  }
 
   get hasActiveSearch(): boolean {
     return this.searchQuery.trim().length > 0;
@@ -80,45 +92,50 @@ export class AuditListComponent implements OnInit, OnDestroy {
     this.loadAudit();
   }
 
- loadAudit(): void {
-  this.loading.set(true);
+  loadAudit(): void {
+    this.loading.set(true);
 
-  this.auditService
-    .getAll(
-      this.currentPage,
-      this.pageSize,
-      this.sortBy,
-      this.sortDir,
-      this.searchQuery
-    )
-    .pipe(
-      timeout(15000),
-      finalize(() => this.loading.set(false))
-    )
-    .subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.logs = res.data.content ?? [];
-          this.totalPages = res.data.totalPages ?? 0;
-          this.totalElements = res.data.totalElements ?? 0;
-        } else {
-          this.toast.error(res.message || 'Erro ao carregar auditoria.');
+    this.auditService
+      .getAll(this.currentPage, this.pageSize, this.sortBy, this.sortDir, this.searchQuery)
+      .pipe(
+        timeout(15000),
+        finalize(() => this.loading.set(false))
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.logs = res.data.content ?? [];
+            this.totalPages = res.data.totalPages ?? 0;
+            this.totalElements = res.data.totalElements ?? 0;
+          } else {
+            this.toast.error(res.message || 'Erro ao carregar auditoria.');
+          }
+        },
+        error: (err) => {
+          if (err.name === 'TimeoutError') {
+            this.toast.error('O servidor demorou para responder.');
+          } else {
+            this.toast.error(err.error?.message || 'Erro ao se conectar com o servidor.');
+          }
         }
-      },
-      error: (err) => {
-        if (err.name === 'TimeoutError') {
-          this.toast.error('O servidor demorou para responder.');
-        } else {
-          this.toast.error(err.error?.message || 'Erro ao se conectar com o servidor.');
-        }
-      }
-    });
-}
+      });
+  }
 
   changePage(page: number): void {
     if (page >= 0 && page < this.totalPages) {
       this.currentPage = page;
       this.loadAudit();
     }
+  }
+
+  setSort(column: string): void {
+    if (this.sortBy === column) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = column;
+      this.sortDir = 'asc';
+    }
+    this.currentPage = 0;
+    this.loadAudit();
   }
 }

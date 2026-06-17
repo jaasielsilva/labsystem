@@ -1,0 +1,79 @@
+<div class="page-content form-page animate-fade-in">
+  <header class="form-header">
+    <a routerLink="/governanca/auditoria" class="back-link">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Voltar
+    </a>
+    <h1 class="page-title-sm">Detalhe da auditoria</h1>
+    <p class="page-subtitle">Registro completo do evento para governança e compliance.</p>
+  </header>
+
+  <div class="glass-card detail-card">
+    <div class="loader-overlay" *ngIf="loading()">
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando registro...</p>
+      </div>
+    </div>
+
+    @if (loadError() && !loading()) {
+      <div class="empty-state">
+        <div class="empty-state-icon">⚠️</div>
+        <p>Não foi possível carregar este registro.</p>
+        <a routerLink="/governanca/auditoria" class="empty-cta btn-link">Voltar para a lista</a>
+      </div>
+    }
+
+    @if (log && !loading()) {
+      <dl class="detail-grid">
+        <div class="detail-item">
+          <dt>Data e hora</dt>
+          <dd class="cell-mono">{{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</dd>
+        </div>
+
+        <div class="detail-item">
+          <dt>Usuário</dt>
+          <dd>{{ log.usuarioEmail || 'Sistema' }}</dd>
+        </div>
+
+        <div class="detail-item">
+          <dt>Perfil</dt>
+          <dd>{{ log.perfil || '—' }}</dd>
+        </div>
+
+        <div class="detail-item">
+          <dt>Escopo</dt>
+          <dd>
+            <span class="badge" [ngClass]="log.scope === 'TENANT_IMPERSONATION' ? 'badge-yellow' : 'badge-gray'">
+              {{ scopeLabel(log.scope) }}
+            </span>
+          </dd>
+        </div>
+
+        <div class="detail-item">
+          <dt>Ação</dt>
+          <dd><span class="badge badge-blue">{{ log.action }}</span></dd>
+        </div>
+
+        <div class="detail-item">
+          <dt>Entidade</dt>
+          <dd>{{ log.entidade }}</dd>
+        </div>
+
+        <div class="detail-item">
+          <dt>ID da entidade</dt>
+          <dd class="cell-mono">{{ log.entidadeId ?? '—' }}</dd>
+        </div>
+
+        <div class="detail-item detail-item-full">
+          <dt>Detalhes</dt>
+          <dd class="detail-text">{{ log.detalhes || '—' }}</dd>
+        </div>
+      </dl>
+    }
+  </div>
+</div>

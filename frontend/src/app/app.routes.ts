@@ -86,6 +86,7 @@ export const routes: Routes = [
 
       {
         path: 'governanca/auditoria',
+        canActivate: [tenantGuard, roleGuard('ADMIN')],
         loadChildren: () =>
           import('./features/governanca/audit/audit.routes')
             .then(m => m.AUDIT_ROUTES)

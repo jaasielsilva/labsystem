@@ -3,95 +3,142 @@
   <header class="page-header">
     <div class="title-group">
       <h1 class="page-title-sm">Auditoria</h1>
-      <p class="page-subtitle">
-        Trilha de ações e eventos para governança e compliance.
-      </p>
+      <p class="page-subtitle">Trilha de ações e eventos para governança e compliance.</p>
     </div>
   </header>
 
   <div class="glass-card table-wrapper">
 
-    <!-- Toolbar -->
     <div class="table-toolbar">
       <div class="table-search">
-        <input #searchInput type="search"
-               class="form-control table-search-input"
-               placeholder="Buscar..."
-               (input)="onSearchInput($event)" />
-
-        <button *ngIf="hasActiveSearch" (click)="clearSearch()">×</button>
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input #searchInput type="search" class="form-control table-search-input"
+          placeholder="Buscar por usuário, ação ou entidade..." (input)="onSearchInput($event)"
+          aria-label="Buscar registros de auditoria" />
+        <button type="button" class="search-clear" *ngIf="hasActiveSearch" (click)="clearSearch()"
+          aria-label="Limpar busca">
+          ×
+        </button>
       </div>
 
       <div class="table-toolbar-end">
         <span class="table-toolbar-meta">
-          @if (loading()) { Carregando... }
-          @else if (totalElements === 0) { Nenhum registro }
-          @else { {{ totalElements }} registros }
+          @if (loading()) {
+          Carregando...
+          } @else if (totalElements === 0 && hasActiveSearch) {
+          Nenhum resultado
+          } @else if (totalElements === 0) {
+          Nenhum registro
+          } @else {
+          {{ totalElements }} {{ totalElements === 1 ? 'registro' : 'registros' }}
+          }
         </span>
+        @if (totalElements > 0 && !loading()) {
+        <span class="stat-chip">Ordenado por {{ sortLabel }}</span>
+        }
       </div>
     </div>
 
-    <!-- Loading -->
     <div class="loader-overlay" *ngIf="loading()">
-      <div class="spinner"></div>
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+      </div>
     </div>
 
-    <!-- Table -->
     <table class="premium-table dense">
       <thead>
         <tr>
-          <th>Data</th>
-          <th>Usuário</th>
-          <th>Ação</th>
-          <th>Entidade</th>
+          <th (click)="setSort('createdAt')" class="sortable">
+            Data
+            <span class="sort-icon" *ngIf="sortBy === 'createdAt'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th (click)="setSort('usuarioEmail')" class="sortable">
+            Usuário
+            <span class="sort-icon" *ngIf="sortBy === 'usuarioEmail'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th (click)="setSort('action')" class="sortable">
+            Ação
+            <span class="sort-icon" *ngIf="sortBy === 'action'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th (click)="setSort('entidade')" class="sortable">
+            Entidade
+            <span class="sort-icon" *ngIf="sortBy === 'entidade'">{{ sortDir === 'asc' ? '▲' : '▼' }}</span>
+          </th>
           <th>Detalhes</th>
+          <th class="actions-header">Ações</th>
         </tr>
       </thead>
 
       <tbody>
-
         <tr *ngFor="let log of logs">
-          <td>{{ log.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td>{{ log.usuarioEmail || 'Sistema' }}</td>
-
+          <td class="cell-mono cell-muted">{{ log.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
           <td>
-            <span class="badge badge-blue">
-              {{ log.action }}
-            </span>
-
-            <span *ngIf="log.scope === 'TENANT_IMPERSONATION'" class="badge badge-yellow">
-              Suporte
-            </span>
+            <span class="cell-name">{{ log.usuarioEmail || 'Sistema' }}</span>
+            <span *ngIf="log.perfil" class="cell-sub cell-muted">{{ log.perfil }}</span>
           </td>
-
-          <td>{{ log.entidade }}</td>
-          <td>{{ log.detalhes }}</td>
+          <td>
+            <span class="badge badge-blue">{{ log.action }}</span>
+            <span *ngIf="log.scope === 'TENANT_IMPERSONATION'" class="badge badge-yellow">Suporte</span>
+          </td>
+          <td>
+            {{ log.entidade }}
+            <span *ngIf="log.entidadeId" class="cell-mono cell-muted"> #{{ log.entidadeId }}</span>
+          </td>
+          <td class="cell-muted cell-truncate" [title]="log.detalhes">{{ log.detalhes }}</td>
+          <td class="actions-cell">
+            <a
+              [routerLink]="['/governanca/auditoria', log.id]"
+              class="btn btn-secondary btn-sm action-open"
+              title="Ver detalhe"
+            >
+              Ver detalhe
+            </a>
+          </td>
         </tr>
 
-        <!-- Empty -->
+        <!-- Filler rows: 6 células para bater com as 6 colunas do thead -->
+        <tr *ngFor="let _ of fillerRows" class="row-filler" aria-hidden="true">
+          <td class="cell-mono filler-spacer">&nbsp;</td>
+          <td><span class="cell-name filler-spacer">&nbsp;</span></td>
+          <td><span class="badge filler-spacer">&nbsp;</span></td>
+          <td class="filler-spacer">&nbsp;</td>
+          <td class="filler-spacer">&nbsp;</td>
+          <td class="filler-spacer">&nbsp;</td>
+        </tr>
+
         <tr *ngIf="logs.length === 0 && !loading()">
-          <td colspan="5">
+          <td colspan="6">
             <div class="empty-state">
-              <p>Nenhum registro encontrado.</p>
+              <div class="empty-state-icon">{{ hasActiveSearch ? '🔍' : '📋' }}</div>
+              @if (hasActiveSearch) {
+              <p>Nenhum registro encontrado para <strong>{{ searchQuery }}</strong>.</p>
+              <button type="button" class="empty-cta btn-link" (click)="clearSearch()">Limpar busca</button>
+              } @else {
+              <p>Nenhum registro de auditoria disponível.</p>
+              }
             </div>
           </td>
         </tr>
-
       </tbody>
     </table>
 
-    <!-- Paginação -->
     <footer class="table-footer" *ngIf="totalElements > 0">
-      <span>
+      <span class="pagination-info">
         Página {{ currentPage + 1 }} de {{ totalPages || 1 }}
+        · {{ logs.length }} de {{ totalElements }}
       </span>
-
       <div class="pagination-controls">
-        <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0">
+        <button type="button" class="page-btn btn-sm" [disabled]="currentPage === 0 || loading()"
+          (click)="changePage(currentPage - 1)">
           Anterior
         </button>
-
-        <button (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">
+        <button type="button" class="page-btn btn-sm" [disabled]="currentPage >= totalPages - 1 || loading()"
+          (click)="changePage(currentPage + 1)">
           Próxima
         </button>
       </div>
