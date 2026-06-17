@@ -101,10 +101,30 @@
   padding-top: 12px;
 }
 
-.danger-link {
+.actions-header,
+.actions-cell {
+  text-align: right;
+  width: 72px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.delete-btn:hover {
+  background: #fef2f2;
+  border-color: var(--color-danger);
   color: var(--color-danger);
-  font-size: 0.8125rem;
-  font-weight: 600;
 }
 
 .form-actions {

@@ -61,7 +61,7 @@
               <th>Código</th>
               <th>Exame</th>
               <th>Valor</th>
-              <th *ngIf="isEditable"></th>
+              <th class="actions-header" *ngIf="isEditable">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -69,8 +69,16 @@
               <td>{{ item.exameCodigo }}</td>
               <td>{{ item.exameNome }}</td>
               <td>{{ formatCurrency(item.valorUnitario) }}</td>
-              <td *ngIf="isEditable">
-                <button type="button" class="btn-link danger-link" (click)="removerExame(i)">Remover</button>
+              <td class="actions-cell" *ngIf="isEditable">
+                <button
+                  type="button"
+                  class="action-btn delete-btn"
+                  (click)="removerExame(i)"
+                  title="Remover exame"
+                  aria-label="Remover exame"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
               </td>
             </tr>
           </tbody>
