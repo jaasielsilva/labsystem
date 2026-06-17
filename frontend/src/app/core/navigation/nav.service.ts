@@ -9,7 +9,7 @@ export class NavService {
   readonly sections = computed(() => this.buildVisibleSections());
 
   canAccess(item: NavItem): boolean {
-    return this.auth.hasRole(...item.roles);
+    return this.auth.hasTenantAccess(...item.roles);
   }
 
   private buildVisibleSections(): NavSection[] {

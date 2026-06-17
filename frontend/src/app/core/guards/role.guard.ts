@@ -7,9 +7,9 @@ export const roleGuard = (...perfis: Perfil[]): CanActivateFn => () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (auth.hasRole(...perfis)) {
+  if (auth.hasTenantAccess(...perfis)) {
     return true;
   }
 
-  return router.createUrlTree(['/clientes']);
+  return router.createUrlTree([auth.getHomeRoute()]);
 };

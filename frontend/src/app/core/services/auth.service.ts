@@ -81,6 +81,23 @@ export class AuthService {
     return !!usuario && perfis.includes(usuario.perfil);
   }
 
+  /**
+   * Acesso a recursos do tenant (menu, rotas operacionais/governança).
+   * Em impersonação, SUPER_ADMIN recebe o mesmo acesso que ADMIN do laboratório.
+   */
+  hasTenantAccess(...perfis: Perfil[]): boolean {
+    if (this.hasRole(...perfis)) {
+      return true;
+    }
+
+    if (this.isImpersonating() && this.isSuperAdmin()) {
+      const tenantRoles: Perfil[] = ['ADMIN', 'OPERADOR', 'VISUALIZADOR'];
+      return perfis.some((perfil) => tenantRoles.includes(perfil));
+    }
+
+    return false;
+  }
+
   isSuperAdmin(): boolean {
     return this.hasRole('SUPER_ADMIN');
   }
@@ -122,11 +139,17 @@ export class AuthService {
   }
 
   canEdit(): boolean {
-    return this.hasRole('ADMIN', 'OPERADOR', 'SUPER_ADMIN');
+    if (this.isImpersonating() && this.isSuperAdmin()) {
+      return true;
+    }
+    return this.hasRole('ADMIN', 'OPERADOR');
   }
 
   canDelete(): boolean {
-    return this.hasRole('ADMIN', 'SUPER_ADMIN');
+    if (this.isImpersonating() && this.isSuperAdmin()) {
+      return true;
+    }
+    return this.hasRole('ADMIN');
   }
 
   private persistSession(data: LoginResponse): void {
