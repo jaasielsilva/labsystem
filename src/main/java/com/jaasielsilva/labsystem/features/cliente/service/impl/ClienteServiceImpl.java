@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.jaasielsilva.labsystem.features.audit.service.AuditService;
 
 @Slf4j
 @Service
@@ -27,6 +28,7 @@ public class ClienteServiceImpl implements ClienteService {
     private final ClienteMapper mapper;
     private final TenantContext tenantContext;
     private final EmpresaRepository empresaRepository;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -54,7 +56,8 @@ public class ClienteServiceImpl implements ClienteService {
         return mapper.toResponse(cliente);
     }
 
-    @Override
+    
+@Override
     @Transactional
     public ClienteResponse create(ClienteRequest request) {
         Long empresaId = tenantContext.requireTenantEmpresaId();
@@ -63,6 +66,7 @@ public class ClienteServiceImpl implements ClienteService {
         if (repository.existsByCpfAndEmpresaId(request.cpf(), empresaId)) {
             throw new BusinessException("CPF já cadastrado no sistema.");
         }
+
         if (repository.existsByEmailAndEmpresaId(request.email(), empresaId)) {
             throw new BusinessException("E-mail já cadastrado no sistema.");
         }
@@ -70,9 +74,20 @@ public class ClienteServiceImpl implements ClienteService {
         Empresa empresa = empresaRepository.getReferenceById(empresaId);
         Cliente cliente = mapper.toEntity(request);
         cliente.setEmpresa(empresa);
+
         Cliente saved = repository.save(cliente);
+
+        // ✅ AUDITORIA CREATE
+        auditService.log(
+                "CREATE",
+                "CLIENTE",
+                saved.getId(),
+                "Cliente criado: " + saved.getNome()
+        );
+
         return mapper.toResponse(saved);
     }
+
 
     @Override
     @Transactional
@@ -92,6 +107,14 @@ public class ClienteServiceImpl implements ClienteService {
 
         mapper.updateEntity(request, cliente);
         Cliente updated = repository.save(cliente);
+
+        // ✅ AUDITORIA UPDATE
+        auditService.log(
+                "UPDATE",
+                "CLIENTE",
+                updated.getId(),
+                "Cliente atualizado: " + updated.getNome()
+        );
         return mapper.toResponse(updated);
     }
 
@@ -103,5 +126,13 @@ public class ClienteServiceImpl implements ClienteService {
         Cliente cliente = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente não encontrado com ID: " + id));
         repository.delete(cliente);
+
+        // ✅ AUDITORIA DELETE
+        auditService.log(
+                "DELETE",
+                "CLIENTE",
+                cliente.getId(),
+                "Cliente deletado: " + cliente.getNome()
+        );
     }
 }

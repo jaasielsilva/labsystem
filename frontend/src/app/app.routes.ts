@@ -86,13 +86,9 @@ export const routes: Routes = [
 
       {
         path: 'governanca/auditoria',
-        canActivate: [roleGuard('ADMIN')],
-        component: PlaceholderComponent,
-        data: {
-          title: 'Auditoria',
-          description: 'Trilha de ações e eventos para governança e compliance.',
-          icon: '📝'
-        }
+        loadChildren: () =>
+          import('./features/governanca/audit/audit.routes')
+            .then(m => m.AUDIT_ROUTES)
       },
 
       {

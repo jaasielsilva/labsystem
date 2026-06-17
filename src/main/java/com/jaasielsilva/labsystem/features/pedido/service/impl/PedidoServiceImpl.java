@@ -27,7 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.jaasielsilva.labsystem.features.audit.service.AuditService;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +45,7 @@ public class PedidoServiceImpl implements PedidoService {
     private final ClienteRepository clienteRepository;
     private final ExameRepository exameRepository;
     private final ResultadoSyncService resultadoSyncService;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -170,6 +171,14 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         repository.delete(pedido);
+
+        //AUDIT: Log de auditoria para remoção de pedido
+        auditService.log(
+                "DELETE",
+                "PEDIDO",
+                pedido.getId(),
+                "Pedido removido: " + pedido.getId()
+        );
     }
 
     private Pedido findPedido(Long id, Long empresaId) {

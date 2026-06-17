@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.jaasielsilva.labsystem.features.audit.service.AuditService;
 
 @Slf4j
 @Service
@@ -27,6 +28,7 @@ public class ExameServiceImpl implements ExameService {
     private final ExameMapper mapper;
     private final TenantContext tenantContext;
     private final EmpresaRepository empresaRepository;
+    private final AuditService auditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -67,6 +69,14 @@ public class ExameServiceImpl implements ExameService {
         Exame exame = mapper.toEntity(request);
         exame.setEmpresa(empresa);
         Exame saved = repository.save(exame);
+        
+        // ✅ AUDITORIA CREATE
+        auditService.log(
+                "CREATE",
+                "EXAME",
+                saved.getId(),
+                "Exame criado: " + saved.getNome()
+        );
         return mapper.toResponse(saved);
     }
 
@@ -85,6 +95,15 @@ public class ExameServiceImpl implements ExameService {
 
         mapper.updateEntity(request, exame);
         Exame updated = repository.save(exame);
+
+        // ✅ AUDITORIA UPDATE
+        auditService.log(
+                "UPDATE",
+                "EXAME",
+                updated.getId(),
+                "Exame atualizado: " + updated.getNome()
+        );
+
         return mapper.toResponse(updated);
     }
 
@@ -96,5 +115,13 @@ public class ExameServiceImpl implements ExameService {
         Exame exame = repository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado com ID: " + id));
         repository.delete(exame);
+
+        // ✅ AUDITORIA DELETE
+        auditService.log(
+                "DELETE",
+                "EXAME",
+                exame.getId(),
+                "Exame deletado: " + exame.getNome()
+        );
     }
 }

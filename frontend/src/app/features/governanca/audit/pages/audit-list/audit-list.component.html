@@ -1,0 +1,101 @@
+<div class="page-content animate-fade-in">
+
+  <header class="page-header">
+    <div class="title-group">
+      <h1 class="page-title-sm">Auditoria</h1>
+      <p class="page-subtitle">
+        Trilha de ações e eventos para governança e compliance.
+      </p>
+    </div>
+  </header>
+
+  <div class="glass-card table-wrapper">
+
+    <!-- Toolbar -->
+    <div class="table-toolbar">
+      <div class="table-search">
+        <input #searchInput type="search"
+               class="form-control table-search-input"
+               placeholder="Buscar..."
+               (input)="onSearchInput($event)" />
+
+        <button *ngIf="hasActiveSearch" (click)="clearSearch()">×</button>
+      </div>
+
+      <div class="table-toolbar-end">
+        <span class="table-toolbar-meta">
+          @if (loading()) { Carregando... }
+          @else if (totalElements === 0) { Nenhum registro }
+          @else { {{ totalElements }} registros }
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loader-overlay" *ngIf="loading()">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Table -->
+    <table class="premium-table dense">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Usuário</th>
+          <th>Ação</th>
+          <th>Entidade</th>
+          <th>Detalhes</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <tr *ngFor="let log of logs">
+          <td>{{ log.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ log.usuarioEmail || 'Sistema' }}</td>
+
+          <td>
+            <span class="badge badge-blue">
+              {{ log.action }}
+            </span>
+
+            <span *ngIf="log.scope === 'TENANT_IMPERSONATION'" class="badge badge-yellow">
+              Suporte
+            </span>
+          </td>
+
+          <td>{{ log.entidade }}</td>
+          <td>{{ log.detalhes }}</td>
+        </tr>
+
+        <!-- Empty -->
+        <tr *ngIf="logs.length === 0 && !loading()">
+          <td colspan="5">
+            <div class="empty-state">
+              <p>Nenhum registro encontrado.</p>
+            </div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    <footer class="table-footer" *ngIf="totalElements > 0">
+      <span>
+        Página {{ currentPage + 1 }} de {{ totalPages || 1 }}
+      </span>
+
+      <div class="pagination-controls">
+        <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0">
+          Anterior
+        </button>
+
+        <button (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1">
+          Próxima
+        </button>
+      </div>
+    </footer>
+
+  </div>
+</div>
