@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-
+import com.jaasielsilva.labsystem.features.audit.service.AuditService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -50,8 +50,11 @@ class ExameServiceImplTest {
     @InjectMocks
     private ExameServiceImpl service;
 
+    @Mock
+    private AuditService auditService;
+
     private Exame exame;
-    private ExameRequest request;
+        private ExameRequest request;
     private ExameResponse response;
     private Empresa empresa;
 

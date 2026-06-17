@@ -6,11 +6,15 @@ import { finalize } from 'rxjs';
 import { ClienteService } from '../../services/cliente.service';
 import { Cliente } from '../../models/cliente.model';
 import { ToastService } from '../../../../core/services/toast.service';
+import { PhoneMaskDirective } from '../../../../shared/utils/phone-mask';
+import { CpfMaskDirective } from '../../../../shared/utils/cpf-mask';
+import { digitsOnlyCpf } from '../../../../shared/utils/cpf.utils';
+
 
 @Component({
   selector: 'app-cliente-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, PhoneMaskDirective, CpfMaskDirective, RouterLink],
   templateUrl: './cliente-form.component.html',
   styleUrls: ['./cliente-form.component.css']
 })
@@ -63,7 +67,7 @@ export class ClienteFormComponent implements OnInit {
   private applyCliente(clientData: Cliente): void {
     this.clienteForm.patchValue({
       nome: clientData.nome,
-      cpf: clientData.cpf,
+      cpf: digitsOnlyCpf(clientData.cpf),
       email: clientData.email,
       telefone: clientData.telefone || '',
       dataNascimento: clientData.dataNascimento
@@ -97,7 +101,11 @@ export class ClienteFormComponent implements OnInit {
     }
 
     this.saving = true;
-    const clienteData: Cliente = this.clienteForm.value;
+    const formValue = this.clienteForm.getRawValue();
+    const clienteData: Cliente = {
+      ...formValue,
+      cpf: digitsOnlyCpf(formValue.cpf)
+    };
 
     const request$ = this.isEditMode && this.clienteId
       ? this.clienteService.update(this.clienteId, clienteData)
