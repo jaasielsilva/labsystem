@@ -1,6 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { Subject, debounceTime, distinctUntilChanged, finalize, takeUntil, timeout } from 'rxjs';
 
 import { ResultadoService } from '../../services/resultado.service';
@@ -11,7 +11,7 @@ import { ToastService } from '../../../../core/services/toast.service';
 @Component({
   selector: 'app-resultado-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './resultado-list.component.html',
   styleUrls: ['./resultado-list.component.css']
 })
@@ -20,7 +20,6 @@ export class ResultadoListComponent implements OnInit, OnDestroy {
 
   private resultadoService = inject(ResultadoService);
   private toast = inject(ToastService);
-  private router = inject(Router);
   protected auth = inject(AuthService);
 
   private readonly destroy$ = new Subject<void>();
@@ -95,10 +94,6 @@ export class ResultadoListComponent implements OnInit, OnDestroy {
       this.currentPage = page;
       this.loadResultados();
     }
-  }
-
-  openResultado(id: number): void {
-    this.router.navigate(['/resultados', id]);
   }
 
   formatDate(value?: string): string {

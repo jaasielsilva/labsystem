@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { map, catchError, of } from 'rxjs';
+import { map, catchError, of, timeout } from 'rxjs';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -16,6 +16,7 @@ export const authGuard: CanActivateFn = () => {
   }
 
   return auth.loadMe().pipe(
+    timeout(10000),
     map(() => true),
     catchError(() => {
       auth.logout();

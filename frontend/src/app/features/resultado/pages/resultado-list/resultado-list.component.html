@@ -49,8 +49,14 @@
           <td class="col-hide-md cell-muted">{{ formatDate(r.dataPedido) }}</td>
           <td><span class="badge" [ngClass]="statusClass(r.status)">{{ statusLabel(r.status) }}</span></td>
           <td class="col-hide-md cell-muted">{{ formatDate(r.dataLiberacao) }}</td>
-          <td>
-            <button type="button" class="action-btn edit-btn" (click)="openResultado(r.id)" title="Abrir">✎</button>
+          <td class="actions-cell">
+            <a
+              [routerLink]="['/resultados', 'laudo', r.id]"
+              class="btn btn-secondary btn-sm action-open"
+              title="Abrir laudo"
+            >
+              Abrir laudo
+            </a>
           </td>
         </tr>
         <tr *ngIf="resultados.length === 0 && !loading()">

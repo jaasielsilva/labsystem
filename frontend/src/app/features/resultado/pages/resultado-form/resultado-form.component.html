@@ -9,7 +9,16 @@
 
   <div class="glass-card form-card">
     <div class="loader-overlay" *ngIf="loading">
-      <div class="spinner spinner-sm-table"></div>
+      <div class="loader-content">
+        <div class="spinner spinner-sm-table"></div>
+        <p class="loader-label">Carregando laudo...</p>
+      </div>
+    </div>
+
+    <div class="load-error" *ngIf="!loading && loadError">
+      <p>Não foi possível carregar este resultado.</p>
+      <p class="load-error-hint">Abra pela lista em <strong>Resultados → Abrir laudo</strong> (não digite o número na URL).</p>
+      <a routerLink="/resultados" class="btn btn-secondary btn-sm">Voltar para resultados</a>
     </div>
 
     <div class="status-banner" *ngIf="resultado">

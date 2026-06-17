@@ -1,12 +1,108 @@
-.form-page { max-width: 900px; }
-.form-card { padding: 24px; position: relative; }
-.status-banner { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
-.meta { font-size: 0.8125rem; color: var(--text-secondary); }
-.laudo-field { min-height: 220px; font-family: inherit; }
-.form-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
-.action-group { display: flex; gap: 8px; margin-right: auto; flex-wrap: wrap; }
-.back-link { display: inline-block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.8125rem; font-weight: 600; }
+.form-page {
+  max-width: 900px;
+}
+
+.form-header {
+  margin-bottom: 16px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  transition: var(--transition-smooth);
+}
+
+.back-link:hover {
+  color: var(--color-accent);
+}
+
+.form-card {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  min-height: 280px;
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loader-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.spinner-sm-table {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+}
+
+.load-error {
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.load-error-hint {
+  margin: 8px 0 16px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status-banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.meta {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.laudo-field {
+  min-height: 220px;
+  font-family: inherit;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.action-group {
+  display: flex;
+  gap: 8px;
+  margin-right: auto;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 650px) {
-  .form-actions { flex-direction: column-reverse; align-items: stretch; }
-  .action-group { margin-right: 0; flex-direction: column; }
+  .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .action-group {
+    margin-right: 0;
+    flex-direction: column;
+  }
 }

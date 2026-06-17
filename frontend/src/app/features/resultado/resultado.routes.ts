@@ -4,5 +4,5 @@ import { ResultadoFormComponent } from './pages/resultado-form/resultado-form.co
 
 export const RESULTADO_ROUTES: Routes = [
   { path: '', component: ResultadoListComponent },
-  { path: ':id', component: ResultadoFormComponent }
+  { path: 'laudo/:id', component: ResultadoFormComponent }
 ];
