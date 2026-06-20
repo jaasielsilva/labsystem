@@ -187,6 +187,31 @@ resultados
 
 **Regra de ouro:** nunca usar `empresaId` do body ou query string para decidir qual tenant acessar.
 
+### Filtros JPA — hoje vs escala
+
+| Aspecto | Hoje (Fase 1) | Futuro (escala) |
+|---------|---------------|-----------------|
+| Estratégia | Filtro **explícito** nos repositories | Filtro **automático** via Hibernate |
+| Exemplos | `findAllByEmpresaId`, `findByIdAndEmpresaId` | `@TenantId`, `@Filter` / `@FilterDef` |
+| Status | ✅ Implementado | 🔲 Avaliar quando houver dezenas de tabelas |
+
+**Situação atual:** cada consulta de negócio passa pelo repository com `empresaId` do `TenantContext`. Funciona, é explícito e fácil de auditar em code review — adequado ao tamanho atual do projeto.
+
+**Risco em escala:** com dezenas de tabelas e centenas de queries, esquecer o filtro em uma consulta nova vira vetor real de vazamento cross-tenant.
+
+**Recomendação (roadmap técnico):** quando o volume de entidades/repositories justificar, migrar para recursos nativos do Hibernate 6 (Spring Boot 3):
+
+1. **`@TenantId`** — Hibernate injeta e filtra `empresa_id` de forma transparente nas entidades tenant-aware; reduz métodos `*ByEmpresaId` nos repositories.
+2. **`@FilterDef` + `@Filter`** — define filtro SQL global (`empresa_id = :tenantId`) ativado por request via `Session.enableFilter()` (integrado ao `TenantContext` / filtro HTTP).
+
+**Pré-requisitos antes de adotar:**
+
+- Resolver escopos especiais: `PLATFORM` (sem filtro), `TENANT_IMPERSONATION` (`actingEmpresaId`), queries nativas e `@Query` JPQL customizadas.
+- Testes de integração que provem isolamento (incluindo regressão de vazamento).
+- Manter `TenantContext` como fonte única do tenant — automação **substitui** o filtro manual, não a origem do ID.
+
+> Até a migração, **todo repository novo** continua com assinatura explícita `*ByEmpresaId` — não relaxar essa regra.
+
 ### Perfis e escopos
 
 | Perfil | Escopo | API principal | Front |

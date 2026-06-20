@@ -347,8 +347,10 @@ O Labsystem **já opera multi-tenant por laboratório** (`empresa_id`). Isso é 
 
 1. `TenantContext.requireTenantEmpresaId()` — JWT ou `actingEmpresaId` na impersonação
 2. `TenantAccessEvaluator` — `@tenantAccess.read()`, `.write()`, `.admin()`
-3. Repositories: `findByIdAndEmpresaId`, `findAllByEmpresaId`, etc.
+3. Repositories: `findByIdAndEmpresaId`, `findAllByEmpresaId`, etc. (filtro **manual** — ver `ARQUITETURA.md` § Filtros JPA)
 4. **Nunca** aceitar `empresaId` do body para autorizar
+
+**Escala (futuro, 🔲):** com dezenas de tabelas, avaliar `@TenantId` ou `@Filter`/`@FilterDef` do Hibernate 6 para injetar `empresa_id` automaticamente — reduz risco de esquecer filtro em query nova. Pré-requisito: cobrir impersonação, escopo `PLATFORM` e queries nativas com testes de isolamento.
 
 **Frontend**
 
